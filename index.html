@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V7：加入桌機限定隱藏開發者模式、上帝模式、波次跳轉與時間凍結的單檔第一人稱射擊遊戲。">
-  <title>NEON BREACH V7 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V7.1：支援 30、60、120 與無上限 FPS、強化遊戲音量，並在暫停解除後提供三秒備戰倒數的單檔第一人稱射擊遊戲。">
+  <title>NEON BREACH V7.1 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -387,6 +387,10 @@
     .setting-row span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .setting-row output { color: var(--cyan); font: 700 11px/1 monospace; }
     .setting-row input { width: 100%; accent-color: var(--cyan); cursor: pointer; }
+    .setting-row select {
+      width: 124px; padding: 7px 8px; color: #def8ff; background: #101e28;
+      border: 1px solid var(--line); border-radius: 4px; font-size: 13px; cursor: pointer;
+    }
     .settings-note { margin-top: 4px; color: #667f87; font-size: 11px; line-height: 1.5; }
 
     .pause-setting {
@@ -524,6 +528,33 @@
     }
     .dev-freeze-dialog .code { color: var(--red); }
     .dev-freeze-dialog h2 { color: #fff0f2; }
+
+    #resume-countdown-screen {
+      z-index: 80;
+      overflow: hidden;
+      pointer-events: auto;
+      background: radial-gradient(circle at center, rgba(12, 34, 44, .32), rgba(0, 4, 8, .72));
+      backdrop-filter: blur(1.5px) saturate(.72);
+    }
+    .resume-countdown-card { text-align: center; pointer-events: none; }
+    .resume-countdown-card .code {
+      color: var(--cyan); font: 700 12px/1 monospace; letter-spacing: .28em;
+      text-shadow: 0 0 14px rgba(77, 231, 255, .42);
+    }
+    #resume-countdown-number {
+      margin: 12px 0 2px;
+      color: #f1fcff;
+      font: 900 clamp(112px, 19vw, 196px)/.8 "Arial Narrow", "Segoe UI", sans-serif;
+      text-shadow: 0 0 24px rgba(77, 231, 255, .34), 0 0 70px rgba(77, 231, 255, .18);
+      animation: resume-countdown-pulse .92s ease-out infinite;
+    }
+    .resume-countdown-card p {
+      margin: 18px 0 0; color: #b8d7df; font-size: 14px; letter-spacing: .2em;
+    }
+    @keyframes resume-countdown-pulse {
+      from { transform: scale(1.08); opacity: 1; }
+      to { transform: scale(.9); opacity: .62; }
+    }
     body.touch-mode #developer-entry-screen,
     body.touch-mode #developer-screen,
     body.touch-mode #dev-freeze-screen,
@@ -644,6 +675,7 @@
     body.touch-mode #toast { top: 55%; bottom: auto; max-width: 80%; text-align: center; }
     body.touch-mode .settings-note { font-size: 12px; }
     body.touch-mode .primary-btn, body.touch-mode .secondary-btn { min-height: 44px; }
+    body.touch-mode #resume-countdown-screen { place-items: center; overflow: hidden; }
 
     @media (max-width: 480px) and (orientation: portrait) {
       body.touch-mode #touch-actions { gap: 6px; right: max(10px, env(safe-area-inset-right)); }
@@ -797,12 +829,12 @@
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V7</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V7.1</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V7 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V7.1 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
@@ -825,7 +857,8 @@
           <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>可多指同時操作，建議橫向握持。</div>
           <div class="settings-stack">
             <label class="setting-row"><span>視角靈敏度 <output data-sensitivity-output>1.00×</output></span><input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="視角靈敏度"></label>
-            <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.55" step="0.05" aria-label="音效音量"></label>
+            <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="音效音量"></label>
+            <label class="setting-row"><span>FPS 上限</span><select data-fps-limit aria-label="FPS 上限"><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="0">無上限</option></select></label>
             <div class="settings-note mouse-help">滑鼠可自由左右轉向與上下俯仰；瞄準時會自動降低靈敏度。按住 F 修補時無法移動、射擊或換彈。</div>
             <div class="settings-note touch-help">靈敏度也適用於手指拖曳；瞄準時會自動降低靈敏度。</div>
           </div>
@@ -839,16 +872,25 @@
       <div class="dialog">
         <div class="code">TACTICAL PAUSE</div>
         <h2>行動暫停</h2>
-        <p>作戰時間已暫停，可在此調整視角靈敏度。</p>
+        <p>作戰時間已暫停，可在此調整視角靈敏度與 FPS 上限。</p>
         <label class="pause-setting">
           <div><span>視角靈敏度</span><output data-sensitivity-output>1.00×</output></div>
           <input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="暫停畫面的視角靈敏度">
         </label>
+        <label class="control-select" style="margin:0 0 16px">FPS 上限<select data-fps-limit aria-label="暫停畫面的 FPS 上限"><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="0">無上限</option></select></label>
         <label class="control-select" style="margin:0 0 16px">操作模式<select data-control-mode aria-label="暫停畫面的操作模式"><option value="auto">自動偵測</option><option value="touch">觸控搖桿</option><option value="desktop">鍵盤滑鼠</option></select></label>
         <button class="secondary-btn touch-only" id="touch-layout-pause-btn" type="button">自訂觸控配置</button>
         <button class="primary-btn" id="resume-btn" type="button">繼續行動</button>
         <button class="secondary-btn touch-only" id="touch-fullscreen" type="button">切換全螢幕（裝置支援時）</button>
         <button class="secondary-btn" id="restart-pause-btn" type="button">重新開始</button>
+      </div>
+    </section>
+
+    <section class="overlay hidden" id="resume-countdown-screen" role="status" aria-live="assertive" aria-atomic="true">
+      <div class="resume-countdown-card">
+        <div class="code">TACTICAL RESUME // STANDBY</div>
+        <div id="resume-countdown-number">3</div>
+        <p>準備恢復行動</p>
       </div>
     </section>
 
@@ -984,6 +1026,8 @@
     const TAU = Math.PI * 2;
     const FOV_BASE = 72 * Math.PI / 180;
     const FINAL_WAVE = 10;
+    const RESUME_COUNTDOWN_MS = 3000;
+    const MASTER_VOLUME_SCALE = 0.36;
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d", { alpha: false });
     const ui = Object.fromEntries([
@@ -991,7 +1035,8 @@
       "armor-bar", "armor-value", "stamina-bar", "stamina-value", "weapon-name",
       "ammo-mag", "ammo-reserve", "grenade-count", "mine-count", "crosshair",
       "reload-prompt", "event-feed", "wave-banner", "wave-title", "wave-sub",
-      "damage-flash", "toast", "start-screen", "pause-screen", "touch-layout-screen", "gameover-screen", "victory-screen",
+      "damage-flash", "toast", "start-screen", "pause-screen", "resume-countdown-screen", "resume-countdown-number",
+      "touch-layout-screen", "gameover-screen", "victory-screen",
       "boss-bar", "boss-fill", "boss-hp-text", "final-wave", "final-score", "high-score",
       "victory-wave", "victory-kills", "victory-score", "difficulty-summary", "gameover-copy", "victory-copy"
     ].map(id => [id, document.getElementById(id)]));
@@ -1002,7 +1047,7 @@
       "dev-wave-target", "dev-toggle-freeze", "dev-close"
     ].map(id => [id, document.getElementById(id)]));
 
-    /* V7 retains the V6.1 difficulty rebuild: each profile changes several systems
+    /* V7.1 retains the V6.1 difficulty rebuild: each profile changes several systems
        together instead of relying on one small HP/damage multiplier. */
     const DIFFICULTY_PROFILES = Object.freeze({
       rookie: Object.freeze({
@@ -1070,7 +1115,8 @@
     const CFG = {
       rayStep: 2,
       difficultyKey: "specops",
-      volume: 0.55,
+      volume: 0.65,
+      fpsLimit: 60,
       sensitivity: 1,
       enemyDamageScale: 0.85,
       armorRepairInterval: 0.75,
@@ -1168,6 +1214,10 @@
     let mouseDownLatch = false;
     let audioCtx = null;
     let masterGain = null;
+    let lastAnimationFrameTime = 0;
+    let frameBudget = 0;
+    let resumeCountdownEnd = 0;
+    let resumeCountdownSecond = 0;
 
     const input = {
       keys: new Set(), fire: false, aim: false,
@@ -1212,6 +1262,93 @@
     function angleDiff(a, b) { let d = (a - b + Math.PI) % TAU - Math.PI; return d < -Math.PI ? d + TAU : d; }
     function pad(n, size) { return Math.floor(n).toString().padStart(size, "0"); }
 
+    function setFpsLimit(value) {
+      const parsed = Number(value);
+      CFG.fpsLimit = [0, 30, 60, 120].includes(parsed) ? parsed : 60;
+      document.querySelectorAll("[data-fps-limit]").forEach(control => {
+        control.value = String(CFG.fpsLimit);
+      });
+      lastAnimationFrameTime = 0;
+      frameBudget = 0;
+      lastTime = performance.now();
+      return CFG.fpsLimit;
+    }
+
+    function shouldProcessFrame(now) {
+      if (!lastAnimationFrameTime) {
+        lastAnimationFrameTime = now;
+        return true;
+      }
+      const frameDelta = Math.min(250, Math.max(0, now - lastAnimationFrameTime));
+      lastAnimationFrameTime = now;
+      if (CFG.fpsLimit === 0) return true;
+      const frameInterval = 1000 / CFG.fpsLimit;
+      frameBudget += frameDelta;
+      if (frameBudget + .35 < frameInterval) return false;
+      frameBudget = frameBudget > frameInterval * 2 ? 0 : Math.max(0, frameBudget - frameInterval);
+      return true;
+    }
+
+    function isResumeCountdownActive() {
+      return resumeCountdownEnd > 0;
+    }
+
+    function cancelResumeCountdown() {
+      resumeCountdownEnd = 0;
+      resumeCountdownSecond = 0;
+      ui["resume-countdown-screen"].classList.add("hidden");
+    }
+
+    function finishResumeCountdown(now = performance.now()) {
+      if (!isResumeCountdownActive()) return false;
+      resumeCountdownEnd = 0;
+      resumeCountdownSecond = 0;
+      ui["resume-countdown-screen"].classList.add("hidden");
+      resetAllInput();
+      lastTime = now;
+      lastAnimationFrameTime = 0;
+      frameBudget = 0;
+      updateTouchVisibility();
+      if (!touchMode && document.pointerLockElement !== canvas) {
+        pauseGame();
+        toast("滑鼠尚未鎖定，請再次繼續行動");
+        return false;
+      }
+      sfx("resume");
+      return true;
+    }
+
+    function updateResumeCountdown(now = performance.now()) {
+      if (!isResumeCountdownActive()) return false;
+      const remaining = resumeCountdownEnd - now;
+      if (remaining <= 0) return finishResumeCountdown(now);
+      const second = Math.max(1, Math.ceil(remaining / 1000));
+      if (second !== resumeCountdownSecond) {
+        resumeCountdownSecond = second;
+        ui["resume-countdown-number"].textContent = String(second);
+        sfx("countdown");
+      }
+      return true;
+    }
+
+    function startResumeCountdown() {
+      if (gameState !== "playing" || developer.panelOpen || developer.timeFrozen) return false;
+      cancelResumeCountdown();
+      resetAllInput();
+      const now = performance.now();
+      resumeCountdownEnd = now + RESUME_COUNTDOWN_MS;
+      resumeCountdownSecond = 0;
+      lastTime = now;
+      lastAnimationFrameTime = 0;
+      frameBudget = 0;
+      ui["resume-countdown-screen"].classList.remove("hidden");
+      initAudio();
+      updateResumeCountdown(now);
+      updateTouchVisibility();
+      if (!touchMode) requestDesktopLock();
+      return true;
+    }
+
     function isDeveloperDesktopEligible() {
       return !touchMode && finePointer.matches && !mobileDeviceReported;
     }
@@ -1221,7 +1358,7 @@
     }
 
     function canPlayerControl() {
-      return gameState === "playing" && !(developer.runActive && (developer.panelOpen || developer.timeFrozen));
+      return gameState === "playing" && !isResumeCountdownActive() && !(developer.runActive && (developer.panelOpen || developer.timeFrozen));
     }
 
     function syncDeveloperUI() {
@@ -1290,7 +1427,7 @@
     }
 
     function openDeveloperPanel() {
-      if (!developer.runActive || !isDeveloperDesktopEligible() || gameState !== "playing") return false;
+      if (!developer.runActive || !isDeveloperDesktopEligible() || gameState !== "playing" || isResumeCountdownActive()) return false;
       developer.panelOpen = true;
       developer.targetWave = clamp(wave || 1, 1, FINAL_WAVE);
       resetAllInput();
@@ -1307,19 +1444,23 @@
       lastTime = performance.now();
       syncDeveloperUI();
       updateHUD();
-      if (!developer.timeFrozen) requestDesktopLock();
+      if (!developer.timeFrozen) startResumeCountdown();
       return true;
     }
 
     function setDeveloperTimeFrozen(frozen) {
       if (!developer.runActive || gameState !== "playing") return false;
+      const wasFrozen = developer.timeFrozen;
       developer.timeFrozen = Boolean(frozen);
       resetAllInput();
       lastTime = performance.now();
-      if (developer.timeFrozen && document.pointerLockElement === canvas) document.exitPointerLock?.();
+      if (developer.timeFrozen) {
+        cancelResumeCountdown();
+        if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+      }
       syncDeveloperUI();
       updateHUD();
-      if (!developer.timeFrozen && !developer.panelOpen) requestDesktopLock();
+      if (wasFrozen && !developer.timeFrozen && !developer.panelOpen) startResumeCountdown();
       return true;
     }
 
@@ -1391,6 +1532,7 @@
     }
 
     function leaveDeveloperState() {
+      cancelResumeCountdown();
       developer.entryOpen = false;
       developer.panelOpen = false;
       developer.timeFrozen = false;
@@ -1776,7 +1918,7 @@
       if (!AudioCtor) return;
       try { audioCtx = new AudioCtor(); } catch (_) { return; }
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = CFG.volume * .24;
+      masterGain.gain.value = CFG.volume * MASTER_VOLUME_SCALE;
       masterGain.connect(audioCtx.destination);
     }
 
@@ -1825,6 +1967,8 @@
       else if (name === "explosion") { noise(.55, .55, 900); tone(72, .5, "sawtooth", .4, .38); }
       else if (name === "kill") tone(760, .11, "triangle", .08, 1.42);
       else if (name === "wave") { tone(220, .25, "sine", .09, 1.5); setTimeout(() => tone(440, .3, "sine", .08, 1.5), 160); }
+      else if (name === "countdown") tone(510, .09, "square", .09, .82);
+      else if (name === "resume") { tone(620, .1, "triangle", .1, 1.18); setTimeout(() => tone(880, .12, "triangle", .08, 1.08), 70); }
     }
 
     function isRepairing() {
@@ -2632,10 +2776,15 @@
     }
 
     function loop(now) {
+      updateResumeCountdown(now);
+      if (!shouldProcessFrame(now)) {
+        requestAnimationFrame(loop);
+        return;
+      }
       const dt = Math.min(.034, Math.max(0, (now - lastTime) / 1000));
       lastTime = now;
       if (canPlayerControl()) updateGame(dt);
-      else if (gameState !== "playing") elapsed += dt * .35;
+      else if (["menu", "gameover", "victory"].includes(gameState)) elapsed += dt * .35;
       render();
       requestAnimationFrame(loop);
     }
@@ -2649,7 +2798,7 @@
     }
 
     function updateTouchVisibility() {
-      const visible = touchMode && (gameState === "playing" || touchLayoutEditorOpen);
+      const visible = touchMode && ((gameState === "playing" && !isResumeCountdownActive()) || touchLayoutEditorOpen);
       touchUI["touch-controls"].classList.toggle("visible", visible);
       touchUI["touch-controls"].classList.toggle("editing", touchLayoutEditorOpen);
       touchUI["touch-controls"].setAttribute("aria-hidden", String(!visible || touchLayoutEditorOpen));
@@ -2805,6 +2954,7 @@
 
     function beginGame(developerRun = false) {
       closeTouchLayoutEditor();
+      cancelResumeCountdown();
       initAudio();
       developer.entryOpen = false;
       developer.panelOpen = false;
@@ -2836,6 +2986,7 @@
 
     function pauseGame() {
       if (gameState !== "playing" || developer.panelOpen || developer.timeFrozen) return;
+      cancelResumeCountdown();
       gameState = "paused";
       resetAllInput();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
@@ -2849,12 +3000,12 @@
       resetAllInput();
       gameState = "playing";
       ui["pause-screen"].classList.add("hidden");
-      updateTouchVisibility();
-      if (!touchMode) requestDesktopLock();
       initAudio();
+      startResumeCountdown();
     }
 
     function gameOver() {
+      cancelResumeCountdown();
       gameState = "gameover";
       resetAllInput();
       document.exitPointerLock?.();
@@ -2872,6 +3023,7 @@
     }
 
     function completeMission() {
+      cancelResumeCountdown();
       gameState = "victory";
       resetAllInput();
       document.exitPointerLock?.();
@@ -2889,6 +3041,7 @@
     }
 
     function returnToMenu() {
+      cancelResumeCountdown();
       gameState = "menu";
       resetAllInput();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
@@ -2946,7 +3099,11 @@
 
     document.getElementById("volume").addEventListener("input", e => {
       CFG.volume = Number(e.target.value);
-      if (masterGain) masterGain.gain.value = CFG.volume * .24;
+      if (masterGain) masterGain.gain.value = CFG.volume * MASTER_VOLUME_SCALE;
+    });
+
+    document.querySelectorAll("[data-fps-limit]").forEach(control => {
+      control.addEventListener("change", event => setFpsLimit(event.target.value));
     });
 
     function setSensitivity(value) {
@@ -2990,6 +3147,11 @@
       }
       if (developer.timeFrozen) {
         e.preventDefault();
+        return;
+      }
+      if (isResumeCountdownActive()) {
+        e.preventDefault();
+        if (!e.repeat && e.code === "Escape") pauseGame();
         return;
       }
       if (e.code === "Escape" && touchLayoutEditorOpen) {
@@ -3101,10 +3263,10 @@
     document.addEventListener("lostpointercapture", event => endContact(event, true));
     document.addEventListener("contextmenu", e => e.preventDefault());
     document.addEventListener("pointerlockchange", () => {
-      if (!touchMode && document.pointerLockElement !== canvas && canPlayerControl()) pauseGame();
+      if (!touchMode && document.pointerLockElement !== canvas && (canPlayerControl() || isResumeCountdownActive())) pauseGame();
     });
-    window.addEventListener("blur", () => { if (canPlayerControl()) pauseGame(); });
-    document.addEventListener("visibilitychange", () => { if (document.hidden && canPlayerControl()) pauseGame(); });
+    window.addEventListener("blur", () => { if (canPlayerControl() || isResumeCountdownActive()) pauseGame(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden && (canPlayerControl() || isResumeCountdownActive())) pauseGame(); });
     window.addEventListener("resize", onViewportResize);
     window.addEventListener("orientationchange", onViewportResize);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportResize);
@@ -3114,6 +3276,7 @@
     initSprites();
     setDifficulty("specops");
     setSensitivity(1);
+    setFpsLimit(60);
     setControlPreference("auto");
     player = { x: 2.7, y: 2.7, dir: .08, pitch: 0, health: 100, armor: 50, stamina: 100, grenades: 3, mines: 2, bob: 0, moving: 0 };
     syncDeveloperUI();
@@ -3132,6 +3295,22 @@
           player: player ? { x: player.x, y: player.y, dir: player.dir, pitch: player.pitch, health: player.health, armor: player.armor, stamina: player.stamina, grenades: player.grenades, mines: player.mines } : null,
           weapon: { name: currentWeapon, mag: weapon.mag, reserve: weapon.reserve }
         };
+      },
+      get settings() {
+        return {
+          fpsLimit: CFG.fpsLimit,
+          volume: CFG.volume,
+          masterVolumeScale: MASTER_VOLUME_SCALE
+        };
+      },
+      get resumeCountdown() {
+        return {
+          active: isResumeCountdownActive(),
+          seconds: isResumeCountdownActive() ? Math.max(1, Math.ceil((resumeCountdownEnd - performance.now()) / 1000)) : 0
+        };
+      },
+      get simulationClock() {
+        return { elapsed, waveDelay, regenerationTimer, armorRepairTimer };
       },
       get developer() {
         return {
@@ -3153,7 +3332,11 @@
         };
       },
       setDifficulty,
+      setFpsLimit,
       start: () => beginGame(false),
+      pause: pauseGame,
+      resume: resumeGame,
+      finishResumeCountdown: () => finishResumeCountdown(resumeCountdownEnd || performance.now()),
       openDeveloperEntry,
       closeDeveloperEntry,
       startDeveloper: startDeveloperGame,
