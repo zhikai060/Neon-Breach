@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V7.1：支援 30、60、120 與無上限 FPS、強化遊戲音量，並在暫停解除後提供三秒備戰倒數的單檔第一人稱射擊遊戲。">
-  <title>NEON BREACH V7.1 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V8：第 10 波可選擇安全撤離或進入無盡作戰，每兩波獲得一次三選一戰術升級，Boss 每五波登場並逐次進化。">
+  <title>NEON BREACH V8 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -351,6 +351,12 @@
       font-size: 12px;
       line-height: 1.45;
     }
+    .run-rules {
+      margin: -6px 0 15px;
+      color: #7f9ba4;
+      font-size: 12px;
+      line-height: 1.55;
+    }
 
     .primary-btn, .secondary-btn {
       width: 100%;
@@ -427,6 +433,64 @@
     }
     .victory-dialog .code { color: var(--green); }
     .victory-dialog h2 { color: #e9fff2; text-shadow: 0 0 24px rgba(101,242,160,.2); }
+
+    #extraction-screen, #upgrade-screen { z-index: 60; }
+    #extraction-screen {
+      background:
+        linear-gradient(135deg, rgba(3, 12, 16, .94), rgba(6, 25, 25, .78)),
+        radial-gradient(circle at 50% 38%, rgba(101, 242, 160, .13), transparent 35%);
+    }
+    .extraction-dialog {
+      width: min(620px, 94vw);
+      border-color: rgba(101, 242, 160, .3);
+      border-top-color: var(--green);
+      box-shadow: 0 30px 110px rgba(0,0,0,.68), 0 0 55px rgba(101,242,160,.08);
+    }
+    .extraction-dialog .code { color: var(--green); }
+    .extraction-dialog h2 { color: #edfff4; }
+    .extraction-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .extraction-actions .secondary-btn { margin-top: 0; border-color: rgba(255,182,72,.35); color: #ffe2b6; }
+
+    #upgrade-screen {
+      background:
+        linear-gradient(120deg, rgba(2, 8, 13, .95), rgba(5, 17, 24, .86)),
+        repeating-linear-gradient(135deg, transparent 0 22px, rgba(77, 231, 255, .02) 22px 23px);
+    }
+    .upgrade-dialog {
+      width: min(900px, 96vw);
+      max-height: min(92vh, 790px);
+      overflow-y: auto;
+      border-color: rgba(77, 231, 255, .25);
+      box-shadow: 0 30px 110px rgba(0,0,0,.68), 0 0 55px rgba(77,231,255,.07);
+    }
+    .upgrade-dialog h2 { font-size: clamp(34px, 5vw, 54px); }
+    .upgrade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0 14px; }
+    .upgrade-card {
+      appearance: none;
+      min-height: 185px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      border: 1px solid rgba(108, 213, 235, .22);
+      border-top-color: rgba(77, 231, 255, .62);
+      background: linear-gradient(150deg, rgba(18, 43, 54, .64), rgba(5, 15, 22, .92));
+      color: #dff9ff;
+      cursor: pointer;
+      transition: transform .16s, border-color .16s, background .16s;
+    }
+    .upgrade-card:hover, .upgrade-card:focus-visible {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      background: linear-gradient(150deg, rgba(24, 65, 77, .76), rgba(6, 20, 29, .96));
+      outline: none;
+    }
+    .upgrade-index { color: var(--cyan); font: 700 11px/1 monospace; letter-spacing: .18em; }
+    .upgrade-card strong { margin: 14px 0 9px; font-size: 21px; line-height: 1.15; }
+    .upgrade-effect { color: #b8d4db; font-size: 14px; line-height: 1.5; }
+    .upgrade-level { margin-top: auto; padding-top: 18px; color: var(--amber); font: 700 12px/1.35 monospace; }
+    .upgrade-note { margin: 0; color: #78949c; font-size: 12px; line-height: 1.55; }
 
     #dev-status {
       position: absolute;
@@ -707,6 +771,9 @@
       #event-feed { display: none; }
       .meter-row { grid-template-columns: 45px 1fr 33px; gap: 5px; margin: 4px 0; }
       .equipment { gap: 4px; }
+      .upgrade-grid { grid-template-columns: 1fr; }
+      .upgrade-card { min-height: 132px; }
+      .extraction-actions { grid-template-columns: 1fr; }
     }
 
     /* V6 mobile control layout editor. Positions use viewport percentages while
@@ -782,7 +849,7 @@
       </div>
 
       <div id="boss-bar">
-        <div id="boss-name"><span>鎮暴重裝單位</span><span id="boss-hp-text">100%</span></div>
+        <div id="boss-name"><span id="boss-title">鎮暴重裝單位 // MK.1</span><span id="boss-hp-text">100%</span></div>
         <div id="boss-meter"><div id="boss-fill"></div></div>
       </div>
 
@@ -829,12 +896,12 @@
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V7.1</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V8</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V7.1 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V8 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
@@ -842,6 +909,7 @@
             <button type="button" data-difficulty="nightmare" aria-pressed="false">夢魘</button>
           </div>
           <p class="difficulty-summary" id="difficulty-summary" aria-live="polite">標準作戰：火力與補給經過平衡，一般玩家可穩定推進至後段波次。</p>
+          <p class="run-rules">每清除兩波可選擇一項小幅強化；通過第 10 波後可安全撤離，或留下進入無盡作戰。</p>
           <button class="primary-btn" id="start-btn" type="button">進入封鎖區</button>
           <div class="controls-grid" id="desktop-controls" aria-label="操作方式">
             <div class="control"><span>移動</span><kbd>WASD</kbd></div>
@@ -854,7 +922,7 @@
             <div class="control"><span>修補護甲</span><kbd>按住 F</kbd></div>
             <div class="control"><span>暫停</span><kbd>ESC</kbd></div>
           </div>
-          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>可多指同時操作，建議橫向握持。</div>
+          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每兩波可選擇一項升級，第 10 波後可決定是否進入無盡作戰。<br>可多指同時操作，建議橫向握持。</div>
           <div class="settings-stack">
             <label class="setting-row"><span>視角靈敏度 <output data-sensitivity-output>1.00×</output></span><input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="視角靈敏度"></label>
             <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="音效音量"></label>
@@ -986,13 +1054,50 @@
       </div>
     </section>
 
+    <section class="overlay hidden" id="extraction-screen" role="dialog" aria-modal="true" aria-labelledby="extraction-title">
+      <div class="dialog extraction-dialog">
+        <div class="code">EXTRACTION WINDOW // WAVE 10 SECURED</div>
+        <h2 id="extraction-title">撤離窗口已開啟</h2>
+        <p>封鎖區的核心防線已被突破。現在撤離即可完成任務；若選擇留下，敵軍將持續增援並進入無盡作戰。</p>
+        <div class="result-grid">
+          <div><small>目前分數</small><b id="extraction-score">0</b></div>
+          <div><small>擊破敵人</small><b id="extraction-kills">0</b></div>
+          <div><small>已選升級</small><b id="extraction-upgrades">0</b></div>
+        </div>
+        <div class="extraction-actions">
+          <button class="primary-btn" id="extract-btn" type="button">安全撤離</button>
+          <button class="secondary-btn" id="endless-btn" type="button">留下繼續（無盡）</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay hidden" id="upgrade-screen" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+      <div class="dialog upgrade-dialog">
+        <div class="code">FIELD MODIFICATION // WAVE <output id="upgrade-wave">02</output></div>
+        <h2 id="upgrade-title">選擇戰術升級</h2>
+        <p>本次作戰可選擇一項小幅強化。所有效果只在目前這一局生效，重新挑戰後會重置。</p>
+        <div class="upgrade-grid" role="group" aria-label="三選一戰術升級">
+          <button class="upgrade-card" id="upgrade-card-0" data-upgrade-slot="0" type="button">
+            <span class="upgrade-index">OPTION 01</span><strong id="upgrade-name-0">升級項目</strong><span class="upgrade-effect" id="upgrade-effect-0">效果說明</span><span class="upgrade-level" id="upgrade-level-0">目前 Lv.0</span>
+          </button>
+          <button class="upgrade-card" id="upgrade-card-1" data-upgrade-slot="1" type="button">
+            <span class="upgrade-index">OPTION 02</span><strong id="upgrade-name-1">升級項目</strong><span class="upgrade-effect" id="upgrade-effect-1">效果說明</span><span class="upgrade-level" id="upgrade-level-1">目前 Lv.0</span>
+          </button>
+          <button class="upgrade-card" id="upgrade-card-2" data-upgrade-slot="2" type="button">
+            <span class="upgrade-index">OPTION 03</span><strong id="upgrade-name-2">升級項目</strong><span class="upgrade-effect" id="upgrade-effect-2">效果說明</span><span class="upgrade-level" id="upgrade-level-2">目前 Lv.0</span>
+          </button>
+        </div>
+        <p class="upgrade-note">常駐升級單次增幅為 6～10%，每項最多四級；若所有項目皆滿級，後續改為提供小型戰地補給。</p>
+      </div>
+    </section>
+
     <section class="overlay hidden" id="gameover-screen">
       <div class="dialog">
         <div class="code">OPERATIVE DOWN</div>
         <h2>訊號中斷</h2>
         <p id="gameover-copy">封鎖區仍未解除。重新整備，準備下一次突入。</p>
         <div class="result-grid">
-          <div><small>抵達波次</small><b id="final-wave">01</b></div>
+          <div><small id="final-wave-label">抵達波次</small><b id="final-wave">01</b></div>
           <div><small>作戰分數</small><b id="final-score">0</b></div>
           <div><small>最高紀錄</small><b id="high-score">0</b></div>
         </div>
@@ -1005,7 +1110,7 @@
       <div class="dialog victory-dialog">
         <div class="code">MISSION COMPLETE</div>
         <h2>封鎖解除</h2>
-        <p id="victory-copy">第 10 波重裝單位已摧毀，失控防禦系統停止運作。作戰完成。</p>
+        <p id="victory-copy">你已清除第 10 波並安全撤離，作戰完成。</p>
         <div class="result-grid">
           <div><small>完成波次</small><b id="victory-wave">10</b></div>
           <div><small>擊破敵人</small><b id="victory-kills">0</b></div>
@@ -1025,7 +1130,8 @@
 
     const TAU = Math.PI * 2;
     const FOV_BASE = 72 * Math.PI / 180;
-    const FINAL_WAVE = 10;
+    const EXTRACTION_WAVE = 10;
+    const DEVELOPER_MAX_WAVE = 99;
     const RESUME_COUNTDOWN_MS = 3000;
     const MASTER_VOLUME_SCALE = 0.36;
     const canvas = document.getElementById("game");
@@ -1036,8 +1142,8 @@
       "ammo-mag", "ammo-reserve", "grenade-count", "mine-count", "crosshair",
       "reload-prompt", "event-feed", "wave-banner", "wave-title", "wave-sub",
       "damage-flash", "toast", "start-screen", "pause-screen", "resume-countdown-screen", "resume-countdown-number",
-      "touch-layout-screen", "gameover-screen", "victory-screen",
-      "boss-bar", "boss-fill", "boss-hp-text", "final-wave", "final-score", "high-score",
+      "touch-layout-screen", "extraction-screen", "upgrade-screen", "gameover-screen", "victory-screen",
+      "boss-bar", "boss-fill", "boss-hp-text", "boss-title", "final-wave", "final-wave-label", "final-score", "high-score",
       "victory-wave", "victory-kills", "victory-score", "difficulty-summary", "gameover-copy", "victory-copy"
     ].map(id => [id, document.getElementById(id)]));
 
@@ -1047,7 +1153,15 @@
       "dev-wave-target", "dev-toggle-freeze", "dev-close"
     ].map(id => [id, document.getElementById(id)]));
 
-    /* V7.1 retains the V6.1 difficulty rebuild: each profile changes several systems
+    const progressionUI = Object.fromEntries([
+      "extraction-score", "extraction-kills", "extraction-upgrades", "upgrade-wave",
+      "upgrade-card-0", "upgrade-card-1", "upgrade-card-2",
+      "upgrade-name-0", "upgrade-name-1", "upgrade-name-2",
+      "upgrade-effect-0", "upgrade-effect-1", "upgrade-effect-2",
+      "upgrade-level-0", "upgrade-level-1", "upgrade-level-2"
+    ].map(id => [id, document.getElementById(id)]));
+
+    /* V8 retains the V6.1 difficulty rebuild: each profile changes several systems
        together instead of relying on one small HP/damage multiplier. */
     const DIFFICULTY_PROFILES = Object.freeze({
       rookie: Object.freeze({
@@ -1123,6 +1237,25 @@
       playerRadius: 0.24
     };
 
+    const UPGRADE_DEFINITIONS = Object.freeze([
+      Object.freeze({ id: "damage", title: "武器校準", effect: "所有槍械傷害 +7%", totalLabel: "武器傷害", amount: .07, direction: "up", maxLevel: 4 }),
+      Object.freeze({ id: "fireRate", title: "輕量槍機", effect: "射擊間隔縮短 6%", totalLabel: "射擊間隔", amount: .06, direction: "down", maxLevel: 4 }),
+      Object.freeze({ id: "reload", title: "快速裝填", effect: "換彈時間縮短 8%", totalLabel: "換彈時間", amount: .08, direction: "down", maxLevel: 4 }),
+      Object.freeze({ id: "movement", title: "輕量裝備", effect: "步行與衝刺速度 +7%", totalLabel: "移動速度", amount: .07, direction: "up", maxLevel: 4 }),
+      Object.freeze({ id: "defense", title: "強化襯層", effect: "受到的傷害降低 6%", totalLabel: "受到傷害", amount: .06, direction: "down", maxLevel: 4 }),
+      Object.freeze({ id: "repair", title: "精密維修組", effect: "護甲修補間隔縮短 10%", totalLabel: "修補間隔", amount: .10, direction: "down", maxLevel: 4 }),
+      Object.freeze({ id: "regeneration", title: "戰地恢復", effect: "隨機回血間隔縮短 8%", totalLabel: "回血間隔", amount: .08, direction: "down", maxLevel: 4 }),
+      Object.freeze({ id: "explosives", title: "爆破調校", effect: "爆炸傷害 +10%、範圍 +5%", totalLabel: "爆炸傷害", amount: .10, direction: "up", maxLevel: 4 })
+    ]);
+
+    const SUPPORT_UPGRADES = Object.freeze([
+      Object.freeze({ id: "support-health", title: "緊急醫療", effect: "立即恢復最大生命的 10%", support: true }),
+      Object.freeze({ id: "support-armor", title: "護甲補片", effect: "立即恢復最大護甲的 10%", support: true }),
+      Object.freeze({ id: "support-ammo", title: "彈藥空投", effect: "補充備用彈藥容量的 10%", support: true })
+    ]);
+
+    let upgradeLevels = Object.fromEntries(UPGRADE_DEFINITIONS.map(definition => [definition.id, 0]));
+
     const developer = {
       entryOpen: false,
       runActive: false,
@@ -1197,8 +1330,13 @@
     let score = 0;
     let kills = 0;
     let sessionHighScore = 0;
-    let regenerationTimer = 1.5;
-    let armorRepairTimer = CFG.armorRepairInterval;
+    let endlessMode = false;
+    let extractionOffered = false;
+    let lastResolvedWave = 0;
+    let upgradeSelections = 0;
+    let currentUpgradeChoices = [];
+    let regenerationTimer = getRegenerationInterval();
+    let armorRepairTimer = getArmorRepairInterval();
     let waveDelay = 0;
     let bannerTimer = 0;
     let fireTimer = 0;
@@ -1261,6 +1399,190 @@
     function rand(min, max) { return min + Math.random() * (max - min); }
     function angleDiff(a, b) { let d = (a - b + Math.PI) % TAU - Math.PI; return d < -Math.PI ? d + TAU : d; }
     function pad(n, size) { return Math.floor(n).toString().padStart(size, "0"); }
+
+    function getUpgradeLevel(id) {
+      return upgradeLevels[id] || 0;
+    }
+
+    function getUpgradeModifier(id) {
+      const definition = UPGRADE_DEFINITIONS.find(item => item.id === id);
+      if (!definition) return 1;
+      const change = definition.amount * getUpgradeLevel(id);
+      return definition.direction === "down" ? Math.max(.5, 1 - change) : 1 + change;
+    }
+
+    function getExplosiveRadiusModifier() {
+      return 1 + getUpgradeLevel("explosives") * .05;
+    }
+
+    function getArmorRepairInterval() {
+      return CFG.armorRepairInterval * getUpgradeModifier("repair");
+    }
+
+    function getRegenerationInterval() {
+      return 1.5 * getUpgradeModifier("regeneration");
+    }
+
+    function getWeaponFireDelay(weapon) {
+      return weapon.fireDelay * getUpgradeModifier("fireRate");
+    }
+
+    function getWeaponReloadTime(weapon) {
+      return weapon.reloadTime * getUpgradeModifier("reload");
+    }
+
+    function resetRunProgression() {
+      upgradeLevels = Object.fromEntries(UPGRADE_DEFINITIONS.map(definition => [definition.id, 0]));
+      endlessMode = false;
+      extractionOffered = false;
+      lastResolvedWave = 0;
+      upgradeSelections = 0;
+      currentUpgradeChoices = [];
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
+    }
+
+    function shuffled(items) {
+      const copy = [...items];
+      for (let index = copy.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+      }
+      return copy;
+    }
+
+    function buildUpgradeChoices() {
+      const available = shuffled(UPGRADE_DEFINITIONS.filter(definition => getUpgradeLevel(definition.id) < definition.maxLevel));
+      const choices = available.slice(0, 3);
+      if (choices.length < 3) choices.push(...shuffled(SUPPORT_UPGRADES).slice(0, 3 - choices.length));
+      return choices;
+    }
+
+    function renderUpgradeChoices() {
+      progressionUI["upgrade-wave"].textContent = pad(wave, 2);
+      currentUpgradeChoices.forEach((choice, index) => {
+        progressionUI[`upgrade-name-${index}`].textContent = choice.title;
+        progressionUI[`upgrade-effect-${index}`].textContent = choice.effect;
+        if (choice.support) {
+          progressionUI[`upgrade-level-${index}`].textContent = "戰地補給 // 不會永久疊加";
+        } else {
+          const current = getUpgradeLevel(choice.id);
+          const next = current + 1;
+          const total = Math.round(choice.amount * next * 100);
+          const sign = choice.direction === "down" ? "−" : "+";
+          progressionUI[`upgrade-level-${index}`].textContent = `Lv.${current} → Lv.${next} / ${choice.maxLevel} · ${choice.totalLabel} ${sign}${total}%`;
+        }
+        progressionUI[`upgrade-card-${index}`].dataset.upgradeId = choice.id;
+      });
+    }
+
+    function showUpgradeSelection() {
+      if (!player || gameState !== "playing") return false;
+      currentUpgradeChoices = buildUpgradeChoices();
+      if (currentUpgradeChoices.length !== 3) return false;
+      gameState = "upgrade";
+      resetAllInput();
+      if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+      renderUpgradeChoices();
+      ui["upgrade-screen"].classList.remove("hidden");
+      updateTouchVisibility();
+      return true;
+    }
+
+    function applySupportUpgrade(choice) {
+      if (choice.id === "support-health") player.health = Math.min(100, player.health + 10);
+      else if (choice.id === "support-armor") player.armor = Math.min(100, player.armor + 10);
+      else if (choice.id === "support-ammo") {
+        weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + 24);
+        weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + 6);
+      }
+    }
+
+    function grantWaveClearRewards() {
+      const difficulty = getDifficultyProfile();
+      if (wave % 2 === 0) {
+        player.grenades = Math.min(5, player.grenades + 1);
+        player.mines = Math.min(4, player.mines + 1);
+      }
+      weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + difficulty.rifleAmmo);
+      weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + difficulty.shotgunAmmo);
+      player.health = Math.min(100, player.health + difficulty.clearHealth);
+      player.armor = Math.min(100, player.armor + difficulty.clearArmor);
+      updateHUD();
+    }
+
+    function scheduleNextWave() {
+      gameState = "playing";
+      waveDelay = getDifficultyProfile().waveBreak;
+      showBanner("區域暫時安全", endlessMode ? `無盡作戰 // 第 ${wave + 1} 波即將抵達` : "下一波攻勢即將抵達", 3.2);
+      updateTouchVisibility();
+    }
+
+    function applyUpgradeChoice(slot) {
+      if (gameState !== "upgrade") return false;
+      const choice = currentUpgradeChoices[Number(slot)];
+      if (!choice) return false;
+      if (choice.support) applySupportUpgrade(choice);
+      else upgradeLevels[choice.id] = Math.min(choice.maxLevel, getUpgradeLevel(choice.id) + 1);
+      upgradeSelections++;
+      armorRepairTimer = Math.min(armorRepairTimer, getArmorRepairInterval());
+      regenerationTimer = Math.min(regenerationTimer, getRegenerationInterval());
+      ui["upgrade-screen"].classList.add("hidden");
+      currentUpgradeChoices = [];
+      scheduleNextWave();
+      feed(`<b>戰術升級：</b>${choice.title} 已套用`);
+      toast(`${choice.title}：${choice.effect}`);
+      updateHUD();
+      if (!touchMode) requestDesktopLock();
+      return true;
+    }
+
+    function showExtractionChoice() {
+      if (gameState !== "playing" || wave !== EXTRACTION_WAVE) return false;
+      extractionOffered = true;
+      gameState = "extraction";
+      resetAllInput();
+      if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+      progressionUI["extraction-score"].textContent = score.toLocaleString("zh-TW");
+      progressionUI["extraction-kills"].textContent = kills.toLocaleString("zh-TW");
+      progressionUI["extraction-upgrades"].textContent = upgradeSelections.toLocaleString("zh-TW");
+      ui["extraction-screen"].classList.remove("hidden");
+      updateTouchVisibility();
+      return true;
+    }
+
+    function chooseExtraction() {
+      if (gameState !== "extraction") return false;
+      ui["extraction-screen"].classList.add("hidden");
+      completeMission();
+      return true;
+    }
+
+    function chooseEndless() {
+      if (gameState !== "extraction") return false;
+      endlessMode = true;
+      ui["extraction-screen"].classList.add("hidden");
+      gameState = "playing";
+      grantWaveClearRewards();
+      feed("<b>無盡作戰：</b>撤離窗口已關閉");
+      if (!showUpgradeSelection()) {
+        scheduleNextWave();
+        if (!touchMode) requestDesktopLock();
+      }
+      return true;
+    }
+
+    function resolveWaveClear() {
+      if (lastResolvedWave === wave) return false;
+      lastResolvedWave = wave;
+      score += wave * 250;
+      sfx("wave");
+      if (wave === EXTRACTION_WAVE && !endlessMode && !extractionOffered) return showExtractionChoice();
+      grantWaveClearRewards();
+      if (wave % 2 === 0 && showUpgradeSelection()) return true;
+      scheduleNextWave();
+      return true;
+    }
 
     function setFpsLimit(value) {
       const parsed = Number(value);
@@ -1429,7 +1751,7 @@
     function openDeveloperPanel() {
       if (!developer.runActive || !isDeveloperDesktopEligible() || gameState !== "playing" || isResumeCountdownActive()) return false;
       developer.panelOpen = true;
-      developer.targetWave = clamp(wave || 1, 1, FINAL_WAVE);
+      developer.targetWave = clamp(wave || 1, 1, DEVELOPER_MAX_WAVE);
       resetAllInput();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       syncDeveloperUI();
@@ -1465,7 +1787,7 @@
     }
 
     function setDeveloperTargetWave(value) {
-      developer.targetWave = clamp(Math.round(Number(value) || 1), 1, FINAL_WAVE);
+      developer.targetWave = clamp(Math.round(Number(value) || 1), 1, DEVELOPER_MAX_WAVE);
       syncDeveloperUI();
       return developer.targetWave;
     }
@@ -1492,7 +1814,7 @@
 
     function jumpToDeveloperWave(targetWave) {
       if (!developer.runActive || gameState !== "playing") return false;
-      const destination = clamp(Math.round(Number(targetWave) || 1), 1, FINAL_WAVE);
+      const destination = clamp(Math.round(Number(targetWave) || 1), 1, DEVELOPER_MAX_WAVE);
       resetAllInput();
       isReloading = false;
       reloadTimer = 0;
@@ -1503,8 +1825,8 @@
       damageFlash = 0;
       hitMarkerTimer = 0;
       killMarkerTimer = 0;
-      regenerationTimer = 1.5;
-      armorRepairTimer = CFG.armorRepairInterval;
+      regenerationTimer = getRegenerationInterval();
+      armorRepairTimer = getArmorRepairInterval();
       waveDelay = 0;
       bannerTimer = 0;
       enemies = [];
@@ -1517,11 +1839,17 @@
       ui["event-feed"].innerHTML = "";
       ui["damage-flash"].style.opacity = "0";
       ui.crosshair.classList.remove("hit", "kill");
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
+      currentUpgradeChoices = [];
       player.x = 2.7;
       player.y = 2.7;
       player.dir = .08;
       player.pitch = 0;
       player.moving = 0;
+      endlessMode = destination > EXTRACTION_WAVE;
+      extractionOffered = endlessMode;
+      lastResolvedWave = destination - 1;
       wave = destination - 1;
       developer.targetWave = destination;
       refillDeveloperResources(false);
@@ -1733,6 +2061,7 @@
     function resetGame() {
       buildMap();
       resetWeapons();
+      resetRunProgression();
       player = {
         x: 2.7, y: 2.7, dir: .08, pitch: 0, health: 100, armor: 50,
         stamina: 100, grenades: 3, mines: 2, bob: 0, moving: 0
@@ -1747,8 +2076,8 @@
       wave = 0;
       score = 0;
       kills = 0;
-      regenerationTimer = 1.5;
-      armorRepairTimer = CFG.armorRepairInterval;
+      regenerationTimer = getRegenerationInterval();
+      armorRepairTimer = getArmorRepairInterval();
       waveDelay = 0;
       fireTimer = 0;
       reloadTimer = 0;
@@ -1860,12 +2189,18 @@
       const levelScale = 1 + Math.max(0, wave - 1) * difficulty.hpGrowth;
       const firstBossBalance = typeName === "boss" && wave === 5 ? .95 : 1;
       const bossScale = typeName === "boss" ? difficulty.bossHpScale : 1;
-      const hp = Math.round(base.hp * levelScale * difficulty.hpScale * bossScale * firstBossBalance);
+      const bossTier = typeName === "boss" ? Math.max(0, Math.floor(wave / 5) - 1) : 0;
+      const bossHpEvolution = 1 + bossTier * .05;
+      const bossSpeedEvolution = 1 + bossTier * .015;
+      const bossDamageEvolution = 1 + bossTier * .03;
+      const bossCadenceEvolution = 1 + bossTier * .02;
+      const hp = Math.round(base.hp * levelScale * difficulty.hpScale * bossScale * firstBossBalance * bossHpEvolution);
       enemies.push({
         type: typeName, x: pos.x, y: pos.y, hp, maxHp: hp,
-        speed: base.speed * (0.96 + wave * .007) * difficulty.speedScale, radius: base.radius,
-        damage: base.damage * difficulty.damageScale * CFG.enemyDamageScale,
-        attackTimer: rand(.2, 1) * difficulty.attackIntervalScale,
+        speed: base.speed * (0.96 + wave * .007) * difficulty.speedScale * bossSpeedEvolution, radius: base.radius,
+        damage: base.damage * difficulty.damageScale * CFG.enemyDamageScale * bossDamageEvolution,
+        attackTimer: rand(.2, 1) * difficulty.attackIntervalScale / bossCadenceEvolution,
+        bossTier,
         pathTimer: 0, target: null, hitFlash: 0, anim: Math.random() * TAU,
         dead: false, alert: 0, strafe: Math.random() < .5 ? -1 : 1
       });
@@ -1882,8 +2217,9 @@
         spawnEnemy(type);
       }
       if (bossWave) spawnEnemy("boss");
-      showBanner(bossWave ? `第 ${wave} 波 // 重裝警報` : `第 ${wave} 波`, bossWave ? "偵測到鎮暴重裝單位" : "清除所有敵對單位", 2.7);
-      feed(bossWave ? "<b>警告：</b>重裝單位已進入區域" : `第 <b>${wave}</b> 波攻勢開始`);
+      const bossMark = Math.max(1, Math.floor(wave / 5));
+      showBanner(bossWave ? `第 ${wave} 波 // 重裝警報` : `第 ${wave} 波`, bossWave ? `偵測到鎮暴重裝單位 MK.${bossMark}` : "清除所有敵對單位", 2.7);
+      feed(bossWave ? `<b>警告：</b>重裝單位 MK.${bossMark} 已進入區域` : `第 <b>${wave}</b> 波攻勢開始`);
       updateHUD();
     }
 
@@ -1994,13 +2330,13 @@
 
     function endArmorRepair() {
       // Keep the current repair cycle if another input source is still held.
-      if (!isRepairing()) armorRepairTimer = CFG.armorRepairInterval;
+      if (!isRepairing()) armorRepairTimer = getArmorRepairInterval();
       updateHUD();
     }
 
     function updateArmorRepair(dt) {
       if (!isRepairing()) {
-        armorRepairTimer = CFG.armorRepairInterval;
+        armorRepairTimer = getArmorRepairInterval();
         return;
       }
       cancelReloadForRepair();
@@ -2008,7 +2344,7 @@
       armorRepairTimer -= dt;
       let restored = false;
       while (armorRepairTimer <= 0) {
-        armorRepairTimer += CFG.armorRepairInterval;
+        armorRepairTimer += getArmorRepairInterval();
         if (player.armor < 100) {
           player.armor = Math.min(100, player.armor + 1);
           restored = true;
@@ -2024,7 +2360,7 @@
       const moveAmount = Math.min(1, Math.hypot(forward, strafe));
       const moving = moveAmount > .01;
       const sprinting = (input.keys.has("ShiftLeft") || touchInput.sprint) && moving && (isGodMode() || player.stamina > 1);
-      let speed = sprinting ? 3.35 : 2.25;
+      let speed = (sprinting ? 3.35 : 2.25) * getUpgradeModifier("movement");
       if (input.aim) speed *= .72;
       if (isGodMode()) player.stamina = 100;
       else if (sprinting) player.stamina = Math.max(0, player.stamina - 24 * dt);
@@ -2077,10 +2413,11 @@
       const w = weapons[currentWeapon];
       if (!canPlayerControl() || isRepairing() || isReloading || w.mag >= w.magSize || w.reserve <= 0) return;
       isReloading = true;
-      reloadTimer = w.reloadTime;
+      const reloadDuration = getWeaponReloadTime(w);
+      reloadTimer = reloadDuration;
       const cycle = ++reloadCycle;
       sfx("reload");
-      setTimeout(() => { if (cycle === reloadCycle && isReloading && canPlayerControl()) sfx("reload"); }, Math.max(0, (w.reloadTime - .35) * 1000));
+      setTimeout(() => { if (cycle === reloadCycle && isReloading && canPlayerControl()) sfx("reload"); }, Math.max(0, (reloadDuration - .35) * 1000));
     }
 
     function completeReload() {
@@ -2124,7 +2461,7 @@
         return;
       }
       w.mag--;
-      fireTimer = w.fireDelay;
+      fireTimer = getWeaponFireDelay(w);
       recoil = Math.min(3, recoil + w.kick);
       shake = Math.min(10, shake + w.kick * 1.4);
       sfx(currentWeapon);
@@ -2147,7 +2484,7 @@
           if (perp < enemy.radius * 1.12 && hitHeight > .04 && hitHeight < targetHeight) { target = enemy; targetDist = along; }
         }
         if (target) {
-          let dmg = w.damage;
+          let dmg = w.damage * getUpgradeModifier("damage");
           if (currentWeapon === "shotgun") dmg *= clamp(1.15 - targetDist / w.range * .65, .48, 1);
           damageEnemy(target, dmg, "槍械");
           anyHit = true;
@@ -2251,10 +2588,13 @@
       sfx("explosion");
       shake = Math.max(shake, 12);
       createExplosionParticles(x, y, "#ff9a47", 36, 1.65);
+      const playerExplosive = source === "手雷" || source === "地雷";
+      const enemyRadius = playerExplosive ? radius * getExplosiveRadiusModifier() : radius;
+      const enemyDamage = playerExplosive ? maxDamage * getUpgradeModifier("explosives") : maxDamage;
       for (const enemy of enemies) {
         if (enemy.dead) continue;
         const d = Math.hypot(enemy.x - x, enemy.y - y);
-        if (d < radius && (lineClear(x, y, enemy.x, enemy.y) || d < 1.1)) damageEnemy(enemy, maxDamage * (1 - d / radius * .68), source);
+        if (d < enemyRadius && (lineClear(x, y, enemy.x, enemy.y) || d < 1.1)) damageEnemy(enemy, enemyDamage * (1 - d / enemyRadius * .68), source);
       }
       const pd = Math.hypot(player.x - x, player.y - y);
       if (pd < radius && lineClear(x, y, player.x, player.y)) damagePlayer(maxDamage * .38 * (1 - pd / radius));
@@ -2356,7 +2696,8 @@
     function enemyShoot(e, distance) {
       const base = enemyTypes[e.type];
       const difficulty = getDifficultyProfile();
-      e.attackTimer = base.cadence * rand(.84, 1.18) * difficulty.attackIntervalScale;
+      const bossCadenceEvolution = 1 + (e.bossTier || 0) * .02;
+      e.attackTimer = base.cadence * rand(.84, 1.18) * difficulty.attackIntervalScale / bossCadenceEvolution;
       sfx("enemy");
       const baseAccuracy = .76 - distance * .035 + (e.type === "boss" ? .1 : 0);
       const accuracy = clamp(baseAccuracy * difficulty.accuracyScale, difficulty.minAccuracy, difficulty.maxAccuracy);
@@ -2376,6 +2717,7 @@
         updateHUD();
         return;
       }
+      amount *= getUpgradeModifier("defense");
       let remaining = amount;
       if (player.armor > 0) {
         const absorbed = Math.min(player.armor, remaining * .62);
@@ -2395,12 +2737,12 @@
         player.health = 100;
         player.armor = 100;
         player.stamina = 100;
-        regenerationTimer = 1.5;
+        regenerationTimer = getRegenerationInterval();
         return;
       }
       regenerationTimer -= dt;
       while (regenerationTimer <= 0) {
-        regenerationTimer += 1.5;
+        regenerationTimer += getRegenerationInterval();
         const amount = Math.floor(Math.random() * 3);
         if (amount > 0) player.health = Math.min(100, player.health + amount);
       }
@@ -2418,23 +2760,8 @@
       updateRegeneration(dt);
 
       enemies = enemies.filter(e => !e.dead || e.hitFlash > -1.1);
-      if (!enemies.some(e => !e.dead) && waveDelay <= 0) {
-        score += wave * 250;
-        sfx("wave");
-        if (wave >= FINAL_WAVE && gameState === "playing") {
-          completeMission();
-          return;
-        }
-        const difficulty = getDifficultyProfile();
-        waveDelay = difficulty.waveBreak;
-        showBanner("區域暫時安全", "下一波攻勢即將抵達", 3.2);
-        if (wave % 2 === 0) { player.grenades = Math.min(5, player.grenades + 1); player.mines = Math.min(4, player.mines + 1); }
-        weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + difficulty.rifleAmmo);
-        weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + difficulty.shotgunAmmo);
-        player.health = Math.min(100, player.health + difficulty.clearHealth);
-        player.armor = Math.min(100, player.armor + difficulty.clearArmor);
-        updateHUD();
-      }
+      if (!enemies.some(e => !e.dead) && waveDelay <= 0) resolveWaveClear();
+      if (gameState !== "playing") return;
       if (waveDelay > 0) {
         waveDelay -= dt;
         if (waveDelay <= 0) nextWave();
@@ -2484,6 +2811,7 @@
       ui["boss-bar"].classList.toggle("visible", !!boss);
       if (boss) {
         const pct = clamp(boss.hp / boss.maxHp * 100, 0, 100);
+        ui["boss-title"].textContent = `鎮暴重裝單位 // MK.${(boss.bossTier || 0) + 1}`;
         ui["boss-fill"].style.width = `${pct}%`;
         ui["boss-hp-text"].textContent = `${Math.ceil(pct)}%`;
       }
@@ -2735,7 +3063,7 @@
         ctx.fillStyle = "#0d171c"; ctx.beginPath(); ctx.moveTo(-25,-12); ctx.lineTo(25,-12); ctx.lineTo(13,53); ctx.lineTo(-22,53); ctx.closePath(); ctx.fill();
         ctx.fillStyle = "#263842"; ctx.fillRect(-126,-57,132,29); ctx.fillStyle = w.color; ctx.shadowBlur=12; ctx.shadowColor=w.color; ctx.fillRect(-105,-50,61,4); ctx.shadowBlur=0;
         ctx.fillStyle = "#090e12"; ctx.fillRect(130,-48,87,18); ctx.fillStyle="#314852"; ctx.fillRect(205,-46,28,14);
-        if (fireTimer > w.fireDelay - .045 && w.mag >= 0) drawMuzzle(238,-39,w.color,1);
+        if (fireTimer > getWeaponFireDelay(w) - .045 && w.mag >= 0) drawMuzzle(238,-39,w.color,1);
       } else {
         ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.beginPath(); ctx.ellipse(0,-28,160,48,0,0,TAU); ctx.fill();
         ctx.fillStyle="#182832"; ctx.strokeStyle="#50636a"; ctx.lineWidth=2;
@@ -2743,10 +3071,10 @@
         ctx.fillStyle="#0b1115"; ctx.fillRect(-93,-49,194,23); ctx.fillStyle=w.color; ctx.shadowBlur=12; ctx.shadowColor=w.color; ctx.fillRect(-53,-43,77,5); ctx.shadowBlur=0;
         ctx.fillStyle="#283943"; ctx.fillRect(91,-57,117,18); ctx.fillStyle="#081014"; ctx.fillRect(201,-56,34,16);
         ctx.fillStyle="#10191e"; ctx.beginPath(); ctx.moveTo(-45,-13); ctx.lineTo(12,-13); ctx.lineTo(-8,54); ctx.lineTo(-51,47); ctx.closePath(); ctx.fill();
-        if (fireTimer > w.fireDelay - .075 && w.mag >= 0) drawMuzzle(240,-48,w.color,1.45);
+        if (fireTimer > getWeaponFireDelay(w) - .075 && w.mag >= 0) drawMuzzle(240,-48,w.color,1.45);
       }
       if (isReloading) {
-        const progress = 1 - reloadTimer / w.reloadTime;
+        const progress = 1 - reloadTimer / getWeaponReloadTime(w);
         ctx.strokeStyle = w.color; ctx.lineWidth = 4; ctx.globalAlpha=.8;
         ctx.beginPath(); ctx.arc(-5,-90,32,-Math.PI/2,-Math.PI/2+TAU*progress); ctx.stroke(); ctx.globalAlpha=1;
       }
@@ -2823,7 +3151,7 @@
       touchInput.aim = false;
       touchInput.sprint = false;
       touchInput.repair = false;
-      armorRepairTimer = CFG.armorRepairInterval;
+      armorRepairTimer = getArmorRepairInterval();
       touchShotPending = 0;
       syncActionInput();
     }
@@ -2973,6 +3301,8 @@
       ui["gameover-screen"].classList.add("hidden");
       ui["victory-screen"].classList.add("hidden");
       ui["pause-screen"].classList.add("hidden");
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
       ui.hud.classList.add("visible");
       syncDeveloperUI();
       updateHUD();
@@ -3011,8 +3341,14 @@
       document.exitPointerLock?.();
       developer.panelOpen = false;
       developer.timeFrozen = false;
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
       if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
-      ui["gameover-copy"].textContent = developer.runActive ? "開發者測試已結束；本次分數不列入最高紀錄。" : "封鎖區仍未解除。重新整備，準備下一次突入。";
+      ui["final-wave-label"].textContent = endlessMode ? "無盡抵達波次" : "抵達波次";
+      if (developer.runActive && endlessMode) ui["gameover-copy"].textContent = `開發者無盡測試於第 ${wave} 波結束；本次分數不列入最高紀錄。`;
+      else if (developer.runActive) ui["gameover-copy"].textContent = "開發者測試已結束；本次分數不列入最高紀錄。";
+      else if (endlessMode) ui["gameover-copy"].textContent = `你在無盡作戰中抵達第 ${wave} 波。撤離機會雖已錯過，但作戰紀錄已留下。`;
+      else ui["gameover-copy"].textContent = "封鎖區仍未解除。重新整備，準備下一次突入。";
       ui["final-wave"].textContent = pad(wave, 2);
       ui["final-score"].textContent = developer.runActive ? `${score.toLocaleString("zh-TW")} DEV` : score.toLocaleString("zh-TW");
       ui["high-score"].textContent = developer.runActive ? "不計分" : sessionHighScore.toLocaleString("zh-TW");
@@ -3029,8 +3365,10 @@
       document.exitPointerLock?.();
       developer.panelOpen = false;
       developer.timeFrozen = false;
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
       if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
-      ui["victory-copy"].textContent = developer.runActive ? "第 10 波測試完成。此為開發者作戰，分數不列入最高紀錄。" : "第 10 波重裝單位已摧毀，失控防禦系統停止運作。作戰完成。";
+      ui["victory-copy"].textContent = developer.runActive ? "你已在第 10 波後安全撤離。此為開發者作戰，分數不列入最高紀錄。" : "你已清除第 10 波並安全撤離，作戰完成。";
       ui["victory-wave"].textContent = pad(wave, 2);
       ui["victory-kills"].textContent = kills.toLocaleString("zh-TW");
       ui["victory-score"].textContent = developer.runActive ? `${score.toLocaleString("zh-TW")} DEV` : score.toLocaleString("zh-TW");
@@ -3051,6 +3389,8 @@
       ui["gameover-screen"].classList.add("hidden");
       ui["victory-screen"].classList.add("hidden");
       ui["pause-screen"].classList.add("hidden");
+      ui["extraction-screen"].classList.add("hidden");
+      ui["upgrade-screen"].classList.add("hidden");
       ui["start-screen"].classList.remove("hidden");
       ui.hud.classList.remove("visible");
       updateTouchVisibility();
@@ -3063,6 +3403,11 @@
     document.getElementById("resume-btn").addEventListener("click", resumeGame);
     document.getElementById("menu-btn").addEventListener("click", returnToMenu);
     document.getElementById("victory-menu-btn").addEventListener("click", returnToMenu);
+    document.getElementById("extract-btn").addEventListener("click", chooseExtraction);
+    document.getElementById("endless-btn").addEventListener("click", chooseEndless);
+    document.querySelectorAll("[data-upgrade-slot]").forEach(button => {
+      button.addEventListener("click", () => applyUpgradeChoice(Number(button.dataset.upgradeSlot)));
+    });
     document.getElementById("touch-layout-start-btn").addEventListener("click", openTouchLayoutEditor);
     document.getElementById("touch-layout-pause-btn").addEventListener("click", openTouchLayoutEditor);
     document.getElementById("touch-layout-done").addEventListener("click", closeTouchLayoutEditor);
@@ -3146,6 +3491,11 @@
         return;
       }
       if (developer.timeFrozen) {
+        e.preventDefault();
+        return;
+      }
+      if (gameState === "upgrade" || gameState === "extraction") {
+        if (e.code === "Tab" || e.target?.tagName === "BUTTON") return;
         e.preventDefault();
         return;
       }
@@ -3328,7 +3678,20 @@
         return {
           key: CFG.difficultyKey,
           ...getDifficultyProfile(),
-          waveCounts: Array.from({ length: FINAL_WAVE }, (_, index) => getWaveEnemyCount(index + 1))
+          waveCounts: Array.from({ length: EXTRACTION_WAVE }, (_, index) => getWaveEnemyCount(index + 1))
+        };
+      },
+      get progression() {
+        const boss = enemies.find(enemy => enemy.type === "boss" && !enemy.dead);
+        return {
+          endlessMode,
+          extractionOffered,
+          lastResolvedWave,
+          upgradeSelections,
+          levels: { ...upgradeLevels },
+          choices: currentUpgradeChoices.map(choice => choice.id),
+          definitions: UPGRADE_DEFINITIONS.map(({ id, amount, direction, maxLevel }) => ({ id, amount, direction, maxLevel })),
+          boss: boss ? { tier: boss.bossTier, hp: boss.hp, maxHp: boss.maxHp, damage: boss.damage, speed: boss.speed } : null
         };
       },
       setDifficulty,
@@ -3347,6 +3710,22 @@
       setTargetWave: setDeveloperTargetWave,
       jumpWave: jumpToDeveloperWave,
       refill: refillDeveloperResources,
+      chooseExtraction,
+      chooseEndless,
+      chooseUpgrade: applyUpgradeChoice,
+      clearWave: () => {
+        if (gameState !== "playing") return false;
+        for (const enemy of enemies) enemy.dead = true;
+        enemies = [];
+        waveDelay = 0;
+        return resolveWaveClear();
+      },
+      advanceWave: () => {
+        if (gameState !== "playing") return false;
+        waveDelay = 0;
+        nextWave();
+        return wave;
+      },
       damagePlayer,
       fireWeapon,
       tick: dt => { if (canPlayerControl()) updateGame(clamp(Number(dt) || 0, 0, .034)); },
