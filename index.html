@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V8：第 10 波可選擇安全撤離或進入無盡作戰，每兩波獲得一次三選一戰術升級，Boss 每五波登場並逐次進化。">
-  <title>NEON BREACH V8 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V8.2：行動端觸控配置使用 localStorage 儲存，直向與橫向設定重新開啟後仍會保留。">
+  <title>NEON BREACH V8.2 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -896,20 +896,20 @@
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V8</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V8.2</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V8 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V8.2 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
             <button type="button" class="active" data-difficulty="specops" aria-pressed="true">特勤</button>
             <button type="button" data-difficulty="nightmare" aria-pressed="false">夢魘</button>
           </div>
-          <p class="difficulty-summary" id="difficulty-summary" aria-live="polite">標準作戰：火力與補給經過平衡，一般玩家可穩定推進至後段波次。</p>
-          <p class="run-rules">每清除兩波可選擇一項小幅強化；通過第 10 波後可安全撤離，或留下進入無盡作戰。</p>
+          <p class="difficulty-summary" id="difficulty-summary" aria-live="polite">標準作戰：一般玩家經過穩定作戰，可完成第 10 波並選擇撤離。</p>
+          <p class="run-rules">每清除三波可選擇一項小幅強化；通過第 10 波後可安全撤離，或留下進入無盡作戰。</p>
           <button class="primary-btn" id="start-btn" type="button">進入封鎖區</button>
           <div class="controls-grid" id="desktop-controls" aria-label="操作方式">
             <div class="control"><span>移動</span><kbd>WASD</kbd></div>
@@ -922,7 +922,7 @@
             <div class="control"><span>修補護甲</span><kbd>按住 F</kbd></div>
             <div class="control"><span>暫停</span><kbd>ESC</kbd></div>
           </div>
-          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每兩波可選擇一項升級，第 10 波後可決定是否進入無盡作戰。<br>可多指同時操作，建議橫向握持。</div>
+          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每三波可選擇一項升級，第 10 波後可決定是否進入無盡作戰。<br>可多指同時操作，建議橫向握持。</div>
           <div class="settings-stack">
             <label class="setting-row"><span>視角靈敏度 <output data-sensitivity-output>1.00×</output></span><input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="視角靈敏度"></label>
             <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="音效音量"></label>
@@ -1026,7 +1026,7 @@
       <div class="dialog touch-layout-dialog">
         <div class="code">TOUCH LAYOUT // <output id="touch-layout-orientation">直向配置</output></div>
         <h2 id="touch-layout-title">觸控配置</h2>
-        <p>選擇控制項後調整位置與大小，畫面會即時預覽。直向與橫向配置各自記錄，重新開啟 HTML 後重設。</p>
+        <p>選擇控制項後調整位置與大小，畫面會即時預覽並自動儲存。直向與橫向配置各自記錄，重新開啟同一個 HTML 時仍會保留。</p>
         <label class="control-select touch-layout-target">調整控制項
           <select id="touch-layout-target" aria-label="選擇要調整的觸控控制項">
             <option value="joystick">移動搖桿</option>
@@ -1073,7 +1073,7 @@
 
     <section class="overlay hidden" id="upgrade-screen" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
       <div class="dialog upgrade-dialog">
-        <div class="code">FIELD MODIFICATION // WAVE <output id="upgrade-wave">02</output></div>
+        <div class="code">FIELD MODIFICATION // WAVE <output id="upgrade-wave">03</output></div>
         <h2 id="upgrade-title">選擇戰術升級</h2>
         <p>本次作戰可選擇一項小幅強化。所有效果只在目前這一局生效，重新挑戰後會重置。</p>
         <div class="upgrade-grid" role="group" aria-label="三選一戰術升級">
@@ -1087,7 +1087,7 @@
             <span class="upgrade-index">OPTION 03</span><strong id="upgrade-name-2">升級項目</strong><span class="upgrade-effect" id="upgrade-effect-2">效果說明</span><span class="upgrade-level" id="upgrade-level-2">目前 Lv.0</span>
           </button>
         </div>
-        <p class="upgrade-note">常駐升級單次增幅為 6～10%，每項最多四級；若所有項目皆滿級，後續改為提供小型戰地補給。</p>
+        <p class="upgrade-note">常駐升級每三波出現一次，原有效果幅度不變且每項最多三級；若所有項目皆滿級，後續改為提供小型戰地補給。</p>
       </div>
     </section>
 
@@ -1131,6 +1131,7 @@
     const TAU = Math.PI * 2;
     const FOV_BASE = 72 * Math.PI / 180;
     const EXTRACTION_WAVE = 10;
+    const UPGRADE_INTERVAL = 3;
     const DEVELOPER_MAX_WAVE = 99;
     const RESUME_COUNTDOWN_MS = 3000;
     const MASTER_VOLUME_SCALE = 0.36;
@@ -1161,68 +1162,69 @@
       "upgrade-level-0", "upgrade-level-1", "upgrade-level-2"
     ].map(id => [id, document.getElementById(id)]));
 
-    /* V8 retains the V6.1 difficulty rebuild: each profile changes several systems
-       together instead of relying on one small HP/damage multiplier. */
+    /* V8.1 retunes the complete pressure curve around three progression targets:
+       Rookie reaches Wave 15 comfortably, Spec Ops clears Wave 10 with steady play,
+       and Nightmare makes the first extraction a genuine challenge. */
     const DIFFICULTY_PROFILES = Object.freeze({
       rookie: Object.freeze({
         label: "新兵",
-        summary: "輕鬆突圍：敵軍較少、較脆、較慢且命中率低，波次間也會獲得充足補給。",
+        summary: "輕鬆作戰：敵軍火力低、補給充足，一般玩家可輕鬆推進至至少第 15 波。",
         hpScale: 0.68,
-        hpGrowth: 0.025,
-        bossHpScale: 0.68,
-        damageScale: 0.50,
-        countScale: 0.62,
-        maxEnemies: 14,
-        speedScale: 0.88,
-        attackIntervalScale: 1.40,
-        accuracyScale: 0.68,
-        minAccuracy: 0.18,
-        maxAccuracy: 0.52,
-        waveBreak: 6.5,
-        clearHealth: 24,
+        hpGrowth: 0.028,
+        bossHpScale: 0.70,
+        damageScale: 0.48,
+        countScale: 0.64,
+        maxEnemies: 16,
+        speedScale: 0.87,
+        attackIntervalScale: 1.45,
+        accuracyScale: 0.65,
+        minAccuracy: 0.16,
+        maxAccuracy: 0.48,
+        waveBreak: 6.8,
+        clearHealth: 25,
         clearArmor: 16,
         rifleAmmo: 38,
         shotgunAmmo: 10
       }),
       specops: Object.freeze({
         label: "特勤",
-        summary: "標準作戰：火力與補給經過平衡，一般玩家可穩定推進至後段波次。",
-        hpScale: 0.88,
-        hpGrowth: 0.040,
-        bossHpScale: 0.88,
-        damageScale: 0.78,
-        countScale: 0.86,
-        maxEnemies: 19,
-        speedScale: 0.96,
-        attackIntervalScale: 1.12,
-        accuracyScale: 0.88,
-        minAccuracy: 0.26,
-        maxAccuracy: 0.70,
-        waveBreak: 5.4,
-        clearHealth: 18,
-        clearArmor: 8,
-        rifleAmmo: 30,
-        shotgunAmmo: 8
+        summary: "標準作戰：一般玩家經過穩定作戰，可完成第 10 波並選擇撤離。",
+        hpScale: 0.90,
+        hpGrowth: 0.042,
+        bossHpScale: 0.92,
+        damageScale: 0.80,
+        countScale: 0.88,
+        maxEnemies: 20,
+        speedScale: 0.98,
+        attackIntervalScale: 1.08,
+        accuracyScale: 0.92,
+        minAccuracy: 0.28,
+        maxAccuracy: 0.72,
+        waveBreak: 5.1,
+        clearHealth: 15,
+        clearArmor: 7,
+        rifleAmmo: 28,
+        shotgunAmmo: 7
       }),
       nightmare: Object.freeze({
         label: "夢魘",
-        summary: "高壓生存：敵軍更多、更耐打、射得更準更快，補給時間與資源也更有限。",
-        hpScale: 1.10,
-        hpGrowth: 0.065,
-        bossHpScale: 1.10,
-        damageScale: 1.16,
-        countScale: 1.12,
-        maxEnemies: 25,
-        speedScale: 1.07,
-        attackIntervalScale: 0.88,
-        accuracyScale: 1.12,
-        minAccuracy: 0.40,
-        maxAccuracy: 0.88,
-        waveBreak: 3.6,
-        clearHealth: 8,
+        summary: "極限生存：敵軍集火更猛烈，第 10 波撤離本身就是一項高難度挑戰。",
+        hpScale: 1.16,
+        hpGrowth: 0.072,
+        bossHpScale: 1.18,
+        damageScale: 1.26,
+        countScale: 1.18,
+        maxEnemies: 29,
+        speedScale: 1.10,
+        attackIntervalScale: 0.82,
+        accuracyScale: 1.20,
+        minAccuracy: 0.44,
+        maxAccuracy: 0.92,
+        waveBreak: 3.2,
+        clearHealth: 5,
         clearArmor: 0,
-        rifleAmmo: 18,
-        shotgunAmmo: 4
+        rifleAmmo: 15,
+        shotgunAmmo: 3
       })
     });
 
@@ -1238,14 +1240,16 @@
     };
 
     const UPGRADE_DEFINITIONS = Object.freeze([
-      Object.freeze({ id: "damage", title: "武器校準", effect: "所有槍械傷害 +7%", totalLabel: "武器傷害", amount: .07, direction: "up", maxLevel: 4 }),
-      Object.freeze({ id: "fireRate", title: "輕量槍機", effect: "射擊間隔縮短 6%", totalLabel: "射擊間隔", amount: .06, direction: "down", maxLevel: 4 }),
-      Object.freeze({ id: "reload", title: "快速裝填", effect: "換彈時間縮短 8%", totalLabel: "換彈時間", amount: .08, direction: "down", maxLevel: 4 }),
-      Object.freeze({ id: "movement", title: "輕量裝備", effect: "步行與衝刺速度 +7%", totalLabel: "移動速度", amount: .07, direction: "up", maxLevel: 4 }),
-      Object.freeze({ id: "defense", title: "強化襯層", effect: "受到的傷害降低 6%", totalLabel: "受到傷害", amount: .06, direction: "down", maxLevel: 4 }),
-      Object.freeze({ id: "repair", title: "精密維修組", effect: "護甲修補間隔縮短 10%", totalLabel: "修補間隔", amount: .10, direction: "down", maxLevel: 4 }),
-      Object.freeze({ id: "regeneration", title: "戰地恢復", effect: "隨機回血間隔縮短 8%", totalLabel: "回血間隔", amount: .08, direction: "down", maxLevel: 4 }),
-      Object.freeze({ id: "explosives", title: "爆破調校", effect: "爆炸傷害 +10%、範圍 +5%", totalLabel: "爆炸傷害", amount: .10, direction: "up", maxLevel: 4 })
+      Object.freeze({ id: "damage", title: "武器校準", effect: "所有槍械傷害 +7%", totalLabel: "武器傷害", amount: .07, direction: "up", maxLevel: 3 }),
+      Object.freeze({ id: "fireRate", title: "輕量槍機", effect: "射擊間隔縮短 6%", totalLabel: "射擊間隔", amount: .06, direction: "down", maxLevel: 3 }),
+      Object.freeze({ id: "reload", title: "快速裝填", effect: "換彈時間縮短 8%", totalLabel: "換彈時間", amount: .08, direction: "down", maxLevel: 3 }),
+      Object.freeze({ id: "movement", title: "輕量裝備", effect: "步行與衝刺速度 +7%", totalLabel: "移動速度", amount: .07, direction: "up", maxLevel: 3 }),
+      Object.freeze({ id: "defense", title: "強化襯層", effect: "受到的傷害降低 6%", totalLabel: "受到傷害", amount: .06, direction: "down", maxLevel: 3 }),
+      Object.freeze({ id: "repair", title: "精密維修組", effect: "護甲修補間隔縮短 10%", totalLabel: "修補間隔", amount: .10, direction: "down", maxLevel: 3 }),
+      Object.freeze({ id: "regeneration", title: "戰地恢復", effect: "隨機回血間隔縮短 8%", totalLabel: "回血間隔", amount: .08, direction: "down", maxLevel: 3 }),
+      Object.freeze({ id: "explosives", title: "爆破調校", effect: "爆炸傷害 +10%、範圍 +5%", totalLabel: "爆炸傷害", amount: .10, direction: "up", maxLevel: 3 }),
+      Object.freeze({ id: "rifleMagazine", title: "步槍擴容彈匣", effect: "突擊步槍彈匣容量 +5", totalLabel: "步槍彈匣", amount: 5, direction: "up", unit: "rounds", magazineFor: "rifle", maxLevel: 3 }),
+      Object.freeze({ id: "shotgunMagazine", title: "霰彈槍擴容彈匣", effect: "霰彈槍彈匣容量 +2", totalLabel: "霰彈槍彈匣", amount: 2, direction: "up", unit: "rounds", magazineFor: "shotgun", maxLevel: 3 })
     ]);
 
     const SUPPORT_UPGRADES = Object.freeze([
@@ -1267,13 +1271,13 @@
 
     const weapons = {
       rifle: {
-        name: "VX-7 突擊步槍", magSize: 30, mag: 30, reserve: 120,
+        name: "VX-7 突擊步槍", baseMagSize: 30, magSize: 30, mag: 30, reserve: 120,
         damage: 27, pellets: 1, spread: 0.018, aimSpread: 0.005,
         fireDelay: 0.092, reloadTime: 1.5, automatic: true, range: 16,
         kick: 0.8, color: "#4de7ff"
       },
       shotgun: {
-        name: "R-12 戰術霰彈槍", magSize: 8, mag: 8, reserve: 32,
+        name: "R-12 戰術霰彈槍", baseMagSize: 8, magSize: 8, mag: 8, reserve: 32,
         damage: 13, pellets: 8, spread: 0.095, aimSpread: 0.055,
         fireDelay: 0.68, reloadTime: 1.9, automatic: false, range: 9,
         kick: 2.2, color: "#ffb648"
@@ -1375,6 +1379,7 @@
       "joystick", "touch-sprint", "touch-fire", "touch-aim", "touch-repair",
       "touch-mine", "touch-grenade", "touch-switch", "touch-reload", "touch-pause"
     ];
+    const TOUCH_LAYOUT_STORAGE_KEY = "NEON_BREACH_TOUCH_LAYOUT_V1";
     const cloneTouchProfile = profile => Object.fromEntries(Object.entries(profile).map(([id, value]) => [id, { ...value }]));
     const touchLayoutDefaults = { landscape: null, portrait: null };
     const touchLayouts = { landscape: null, portrait: null };
@@ -1468,9 +1473,10 @@
         } else {
           const current = getUpgradeLevel(choice.id);
           const next = current + 1;
-          const total = Math.round(choice.amount * next * 100);
           const sign = choice.direction === "down" ? "−" : "+";
-          progressionUI[`upgrade-level-${index}`].textContent = `Lv.${current} → Lv.${next} / ${choice.maxLevel} · ${choice.totalLabel} ${sign}${total}%`;
+          const total = choice.unit === "rounds" ? choice.amount * next : Math.round(choice.amount * next * 100);
+          const suffix = choice.unit === "rounds" ? " 發" : "%";
+          progressionUI[`upgrade-level-${index}`].textContent = `Lv.${current} → Lv.${next} / ${choice.maxLevel} · ${choice.totalLabel} ${sign}${total}${suffix}`;
         }
         progressionUI[`upgrade-card-${index}`].dataset.upgradeId = choice.id;
       });
@@ -1523,7 +1529,17 @@
       const choice = currentUpgradeChoices[Number(slot)];
       if (!choice) return false;
       if (choice.support) applySupportUpgrade(choice);
-      else upgradeLevels[choice.id] = Math.min(choice.maxLevel, getUpgradeLevel(choice.id) + 1);
+      else {
+        const previousLevel = getUpgradeLevel(choice.id);
+        const nextLevel = Math.min(choice.maxLevel, previousLevel + 1);
+        upgradeLevels[choice.id] = nextLevel;
+        if (choice.magazineFor && nextLevel > previousLevel) {
+          const weapon = weapons[choice.magazineFor];
+          const addedCapacity = choice.amount * (nextLevel - previousLevel);
+          weapon.magSize = weapon.baseMagSize + choice.amount * nextLevel;
+          weapon.mag = Math.min(weapon.magSize, weapon.mag + addedCapacity);
+        }
+      }
       upgradeSelections++;
       armorRepairTimer = Math.min(armorRepairTimer, getArmorRepairInterval());
       regenerationTimer = Math.min(regenerationTimer, getRegenerationInterval());
@@ -1565,7 +1581,7 @@
       gameState = "playing";
       grantWaveClearRewards();
       feed("<b>無盡作戰：</b>撤離窗口已關閉");
-      if (!showUpgradeSelection()) {
+      if (wave % UPGRADE_INTERVAL !== 0 || !showUpgradeSelection()) {
         scheduleNextWave();
         if (!touchMode) requestDesktopLock();
       }
@@ -1579,7 +1595,7 @@
       sfx("wave");
       if (wave === EXTRACTION_WAVE && !endlessMode && !extractionOffered) return showExtractionChoice();
       grantWaveClearRewards();
-      if (wave % 2 === 0 && showUpgradeSelection()) return true;
+      if (wave % UPGRADE_INTERVAL === 0 && showUpgradeSelection()) return true;
       scheduleNextWave();
       return true;
     }
@@ -1909,6 +1925,42 @@
       };
     }
 
+    function loadTouchLayouts() {
+      try {
+        const raw = window.localStorage.getItem(TOUCH_LAYOUT_STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (!saved || saved.version !== 1 || !saved.layouts || typeof saved.layouts !== "object") return;
+        for (const orientation of ["portrait", "landscape"]) {
+          const profile = saved.layouts[orientation];
+          if (!profile || typeof profile !== "object" || Array.isArray(profile)) continue;
+          const valid = TOUCH_LAYOUT_IDS.every(id => {
+            const item = profile[id];
+            return item && typeof item === "object" && !Array.isArray(item) &&
+              ["x", "y", "size"].every(key => typeof item[key] === "number" && Number.isFinite(item[key])) &&
+              item.x >= 0 && item.x <= 100 && item.y >= 0 && item.y <= 100 &&
+              item.size >= 60 && item.size <= 160;
+          });
+          if (valid) touchLayouts[orientation] = Object.fromEntries(TOUCH_LAYOUT_IDS.map(id => [id, { ...profile[id] }]));
+        }
+      } catch (_) {
+        // localStorage may be unavailable for private browsing or file URLs.
+      }
+    }
+
+    function saveTouchLayouts() {
+      try {
+        window.localStorage.setItem(TOUCH_LAYOUT_STORAGE_KEY, JSON.stringify({
+          version: 1,
+          layouts: Object.fromEntries(["portrait", "landscape"]
+            .filter(orientation => touchLayouts[orientation])
+            .map(orientation => [orientation, touchLayouts[orientation]]))
+        }));
+      } catch (_) {
+        // Keep the layout active for this session if storage is blocked or full.
+      }
+    }
+
     function ensureTouchLayoutProfile(orientation) {
       if (!touchLayoutDefaults[orientation]) touchLayoutDefaults[orientation] = makeTouchDefaultProfile(orientation);
       if (!touchLayouts[orientation]) touchLayouts[orientation] = cloneTouchProfile(touchLayoutDefaults[orientation]);
@@ -1979,6 +2031,7 @@
       ensureTouchLayoutProfile(orientation)[touchLayoutTarget][property] = Number(value);
       applyTouchLayout();
       syncTouchLayoutEditor();
+      saveTouchLayouts();
     }
 
     function openTouchLayoutEditor() {
@@ -2007,6 +2060,7 @@
       touchLayouts[orientation][touchLayoutTarget] = { ...touchLayoutDefaults[orientation][touchLayoutTarget] };
       applyTouchLayout();
       syncTouchLayoutEditor();
+      saveTouchLayouts();
     }
 
     function resetTouchLayoutOrientation() {
@@ -2015,6 +2069,7 @@
       touchLayouts[orientation] = cloneTouchProfile(touchLayoutDefaults[orientation]);
       applyTouchLayout();
       syncTouchLayoutEditor();
+      saveTouchLayouts();
     }
 
     function buildMap() {
@@ -2051,8 +2106,10 @@
     }
 
     function resetWeapons() {
+      weapons.rifle.magSize = weapons.rifle.baseMagSize;
       weapons.rifle.mag = weapons.rifle.magSize;
       weapons.rifle.reserve = 120;
+      weapons.shotgun.magSize = weapons.shotgun.baseMagSize;
       weapons.shotgun.mag = weapons.shotgun.magSize;
       weapons.shotgun.reserve = 32;
       currentWeapon = "rifle";
@@ -3621,6 +3678,7 @@
     window.addEventListener("orientationchange", onViewportResize);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportResize);
 
+    loadTouchLayouts();
     resize();
     buildMap();
     initSprites();
@@ -3643,7 +3701,7 @@
           sensitivity: CFG.sensitivity,
           controls: touchMode ? "touch" : "desktop",
           player: player ? { x: player.x, y: player.y, dir: player.dir, pitch: player.pitch, health: player.health, armor: player.armor, stamina: player.stamina, grenades: player.grenades, mines: player.mines } : null,
-          weapon: { name: currentWeapon, mag: weapon.mag, reserve: weapon.reserve }
+          weapon: { name: currentWeapon, mag: weapon.mag, magSize: weapon.magSize, reserve: weapon.reserve }
         };
       },
       get settings() {
@@ -3687,14 +3745,20 @@
           endlessMode,
           extractionOffered,
           lastResolvedWave,
+          upgradeInterval: UPGRADE_INTERVAL,
           upgradeSelections,
           levels: { ...upgradeLevels },
           choices: currentUpgradeChoices.map(choice => choice.id),
-          definitions: UPGRADE_DEFINITIONS.map(({ id, amount, direction, maxLevel }) => ({ id, amount, direction, maxLevel })),
+          definitions: UPGRADE_DEFINITIONS.map(({ id, amount, direction, unit, magazineFor, maxLevel }) => ({ id, amount, direction, unit, magazineFor, maxLevel })),
+          magazines: {
+            rifle: { level: getUpgradeLevel("rifleMagazine"), size: weapons.rifle.magSize, loaded: weapons.rifle.mag },
+            shotgun: { level: getUpgradeLevel("shotgunMagazine"), size: weapons.shotgun.magSize, loaded: weapons.shotgun.mag }
+          },
           boss: boss ? { tier: boss.bossTier, hp: boss.hp, maxHp: boss.maxHp, damage: boss.damage, speed: boss.speed } : null
         };
       },
       setDifficulty,
+      getWaveEnemyCount: waveNumber => getWaveEnemyCount(Math.max(1, Math.floor(Number(waveNumber) || 1))),
       setFpsLimit,
       start: () => beginGame(false),
       pause: pauseGame,
