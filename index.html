@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V8.2：行動端觸控配置使用 localStorage 儲存，直向與橫向設定重新開啟後仍會保留。">
-  <title>NEON BREACH V8.2 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V9：新增地下研究所地圖，抵達第 10 波可抽取醫療包、新槍或直達第 15 波。">
+  <title>NEON BREACH V9 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -198,6 +198,15 @@
     }
     .equipment span { padding: 5px 8px; border: 1px solid rgba(184, 221, 230, .16); background: rgba(255,255,255,.035); }
     .equipment b { color: #fff; }
+    #medkit-hud {
+      display: none; position: absolute; left: max(24px, env(safe-area-inset-left));
+      bottom: max(174px, calc(env(safe-area-inset-bottom) + 150px));
+      padding: 9px 13px; border: 1px solid rgba(101,242,160,.65);
+      background: rgba(8,45,30,.82); color: #dcffe9; font: 700 13px/1.3 monospace;
+      pointer-events: auto; cursor: pointer; box-shadow: 0 0 20px rgba(101,242,160,.15);
+    }
+    #medkit-hud.visible { display: block; }
+    body.touch-mode #medkit-hud { display: none !important; }
 
     #crosshair {
       --gap: 7px;
@@ -288,6 +297,8 @@
       backdrop-filter: blur(3px);
     }
     .overlay.hidden { display: none; }
+    #start-screen { overflow-y: auto; align-items: safe center; }
+    #start-screen .menu-shell { margin: auto; padding: 16px 0; }
 
     .menu-shell {
       width: min(980px, 96vw);
@@ -344,6 +355,16 @@
     }
     .difficulty button:hover { border-color: rgba(77, 231, 255, .5); color: #dffaff; }
     .difficulty button.active { border-color: var(--cyan); color: var(--cyan); background: rgba(77, 231, 255, .09); box-shadow: inset 0 -2px var(--cyan); }
+    .map-select { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px; }
+    .map-card {
+      appearance: none; min-height: 67px; padding: 10px 11px; text-align: left;
+      border: 1px solid rgba(135,195,208,.2); background: rgba(255,255,255,.025);
+      color: #a3bdc5; cursor: pointer;
+    }
+    .map-card strong { display: block; color: #deeff4; font-size: 12px; margin-bottom: 5px; }
+    .map-card span { font-size: 10px; line-height: 1.35; }
+    .map-card:hover, .map-card:focus-visible { border-color: var(--cyan); }
+    .map-card.active { border-color: var(--cyan); background: rgba(77,231,255,.1); box-shadow: inset 0 -2px var(--cyan); }
     .difficulty-summary {
       min-height: 34px;
       margin: 0 0 16px;
@@ -448,6 +469,12 @@
     }
     .extraction-dialog .code { color: var(--green); }
     .extraction-dialog h2 { color: #edfff4; }
+    #lottery-screen { z-index: 65; }
+    .lottery-dialog { width: min(540px, 94vw); border-top-color: var(--amber); }
+    .lottery-dialog .code { color: var(--amber); }
+    .lottery-odds { padding: 13px; margin-bottom: 14px; color: #c6d7d9; line-height: 1.65; font-size: 13px; border: 1px solid var(--line); }
+    #lottery-result { min-height: 65px; padding: 14px; margin-bottom: 15px; color: #ffe7b9; font-size: 17px; line-height: 1.5; background: rgba(255,182,72,.08); }
+    .lottery-dialog .hidden { display: none; }
     .extraction-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .extraction-actions .secondary-btn { margin-top: 0; border-color: rgba(255,182,72,.35); color: #ffe2b6; }
 
@@ -707,6 +734,9 @@
     }
     #touch-actions .touch-button { position: relative; }
     #touch-pause { top: max(10px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); width: 46px; height: 46px; border-radius: 12px; }
+    #touch-medkit { display: none; left: 24px; bottom: 255px; border-color: var(--green); background: rgba(16,79,46,.38); }
+    #touch-medkit.unlocked, #touch-controls.editing #touch-medkit { display: grid; }
+    #touch-medkit .touch-count { color: var(--green); }
 
     body.touch-mode .touch-help { display: block; margin: 14px 0 0; color: #b1cbd3; font-size: 14px; line-height: 1.7; }
     body.touch-mode .touch-only { display: block; }
@@ -751,12 +781,14 @@
       body.touch-mode #touch-actions { bottom: max(10px, env(safe-area-inset-bottom)); }
       body.touch-mode #joystick { bottom: max(76px, calc(env(safe-area-inset-bottom) + 66px)); }
       body.touch-mode #touch-sprint { bottom: max(222px, calc(env(safe-area-inset-bottom) + 212px)); }
+      body.touch-mode #touch-medkit { left: 30px; bottom: 280px; }
     }
     @media (orientation: landscape) and (max-height: 430px) {
       body.touch-mode #touch-sprint {
         left: max(168px, calc(env(safe-area-inset-left) + 150px));
         bottom: max(26px, env(safe-area-inset-bottom));
       }
+      body.touch-mode #touch-medkit { left: 168px; bottom: 106px; }
     }
 
     @media (max-width: 760px), (max-height: 580px) {
@@ -874,6 +906,7 @@
         <div class="ammo-line"><span id="ammo-mag">30</span><span class="ammo-divider">/</span><span id="ammo-reserve">120</span></div>
         <div class="equipment"><span>手雷 <b id="grenade-count">3</b></span><span>地雷 <b id="mine-count">2</b></span></div>
       </div>
+      <button type="button" id="medkit-hud" aria-label="使用醫療包，快捷鍵 H">[ H ] 醫療包 ×<span id="medkit-count">0</span></button>
     </section>
 
     <div id="dev-status" role="status" aria-live="polite">DEV // 生存模式</div>
@@ -891,17 +924,18 @@
         <button type="button" class="touch-button" id="touch-reload" aria-label="重新裝填">換彈</button>
       </div>
       <button type="button" class="touch-button" id="touch-pause" aria-label="暫停遊戲">暫停</button>
+      <button type="button" class="touch-button" id="touch-medkit" aria-label="使用醫療包">醫療<span class="touch-count" id="touch-medkit-count">0</span></button>
     </div>
 
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V8.2</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V9</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V8.2 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V9 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
@@ -909,20 +943,27 @@
             <button type="button" data-difficulty="nightmare" aria-pressed="false">夢魘</button>
           </div>
           <p class="difficulty-summary" id="difficulty-summary" aria-live="polite">標準作戰：一般玩家經過穩定作戰，可完成第 10 波並選擇撤離。</p>
-          <p class="run-rules">每清除三波可選擇一項小幅強化；通過第 10 波後可安全撤離，或留下進入無盡作戰。</p>
+          <p class="panel-label">選擇作戰地圖</p>
+          <div class="map-select" role="group" aria-label="選擇地圖">
+            <button class="map-card active" data-map="outpost" type="button" aria-pressed="true"><strong>01 // 封鎖區</strong><span>原始設施 · 多條掩護路線</span></button>
+            <button class="map-card" data-map="lab" type="button" aria-pressed="false"><strong>02 // 地下研究所</strong><span>環形走廊 · 中央實驗區</span></button>
+          </div>
+          <p class="run-rules">每清除三波可選擇一項小幅強化；進入第 10 波可抽獎一次，通過後可撤離或進入無盡作戰。</p>
           <button class="primary-btn" id="start-btn" type="button">進入封鎖區</button>
           <div class="controls-grid" id="desktop-controls" aria-label="操作方式">
             <div class="control"><span>移動</span><kbd>WASD</kbd></div>
             <div class="control"><span>衝刺</span><kbd>Shift</kbd></div>
             <div class="control"><span>環視 / 射擊</span><kbd>滑鼠</kbd></div>
             <div class="control"><span>換彈</span><kbd>R</kbd></div>
-            <div class="control"><span>切換武器</span><kbd>1 / 2</kbd></div>
+            <div class="control"><span>切換武器</span><kbd>1 / 2 / 3*</kbd></div>
             <div class="control"><span>手雷</span><kbd>G</kbd></div>
             <div class="control"><span>地雷</span><kbd>M</kbd></div>
             <div class="control"><span>修補護甲</span><kbd>按住 F</kbd></div>
+            <div class="control"><span>使用醫療包*</span><kbd>H</kbd></div>
             <div class="control"><span>暫停</span><kbd>ESC</kbd></div>
           </div>
-          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每三波可選擇一項升級，第 10 波後可決定是否進入無盡作戰。<br>可多指同時操作，建議橫向握持。</div>
+          <div class="settings-note mouse-help">* 第 10 波抽中對應獎勵後才會解鎖。</div>
+          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每三波可選擇一項升級，第 10 波抽獎；抽中醫療包後才會出現使用鍵。<br>可多指同時操作，建議橫向握持。</div>
           <div class="settings-stack">
             <label class="setting-row"><span>視角靈敏度 <output data-sensitivity-output>1.00×</output></span><input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="視角靈敏度"></label>
             <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="音效音量"></label>
@@ -1039,6 +1080,7 @@
             <option value="touch-switch">切槍</option>
             <option value="touch-reload">換彈</option>
             <option value="touch-pause">暫停</option>
+            <option value="touch-medkit">醫療包</option>
           </select>
         </label>
         <div class="touch-layout-grid">
@@ -1051,6 +1093,18 @@
           <button class="secondary-btn" id="touch-layout-reset-all" type="button">重設此方向</button>
         </div>
         <button class="primary-btn" id="touch-layout-done" type="button">完成配置</button>
+      </div>
+    </section>
+
+    <section class="overlay hidden" id="lottery-screen" role="dialog" aria-modal="true" aria-labelledby="lottery-title">
+      <div class="dialog lottery-dialog">
+        <div class="code">WAVE 10 // 補給抽獎</div>
+        <h2 id="lottery-title">第 10 波抽獎</h2>
+        <p>進入第 10 波前可抽獎一次。本局只有這一次機會。</p>
+        <div class="lottery-odds">沒中 50% · 醫療包 ×2 25%<br>穿甲精準槍 20% · 直達第 15 波 5%</div>
+        <div id="lottery-result" role="status" aria-live="polite">準備好了就抽一次。</div>
+        <button class="primary-btn" id="lottery-draw" type="button">抽一次</button>
+        <button class="primary-btn hidden" id="lottery-continue" type="button">開始第 10 波</button>
       </div>
     </section>
 
@@ -1131,6 +1185,7 @@
     const TAU = Math.PI * 2;
     const FOV_BASE = 72 * Math.PI / 180;
     const EXTRACTION_WAVE = 10;
+    const LOTTERY_WAVE = 10;
     const UPGRADE_INTERVAL = 3;
     const DEVELOPER_MAX_WAVE = 99;
     const RESUME_COUNTDOWN_MS = 3000;
@@ -1143,9 +1198,11 @@
       "ammo-mag", "ammo-reserve", "grenade-count", "mine-count", "crosshair",
       "reload-prompt", "event-feed", "wave-banner", "wave-title", "wave-sub",
       "damage-flash", "toast", "start-screen", "pause-screen", "resume-countdown-screen", "resume-countdown-number",
-      "touch-layout-screen", "extraction-screen", "upgrade-screen", "gameover-screen", "victory-screen",
+      "touch-layout-screen", "lottery-screen", "lottery-result", "lottery-draw", "lottery-continue",
+      "extraction-screen", "upgrade-screen", "gameover-screen", "victory-screen",
       "boss-bar", "boss-fill", "boss-hp-text", "boss-title", "final-wave", "final-wave-label", "final-score", "high-score",
-      "victory-wave", "victory-kills", "victory-score", "difficulty-summary", "gameover-copy", "victory-copy"
+      "victory-wave", "victory-kills", "victory-score", "difficulty-summary", "gameover-copy", "victory-copy",
+      "medkit-hud", "medkit-count"
     ].map(id => [id, document.getElementById(id)]));
 
     const devUI = Object.fromEntries([
@@ -1281,6 +1338,12 @@
         damage: 13, pellets: 8, spread: 0.095, aimSpread: 0.055,
         fireDelay: 0.68, reloadTime: 1.9, automatic: false, range: 9,
         kick: 2.2, color: "#ffb648"
+      },
+      marksman: {
+        name: "L-9 穿甲精準槍", baseMagSize: 12, magSize: 12, mag: 12, reserve: 60,
+        damage: 56, pellets: 1, spread: 0.007, aimSpread: 0.002,
+        fireDelay: 0.29, reloadTime: 1.65, automatic: false, range: 23,
+        kick: 1.45, color: "#b69bff"
       }
     };
 
@@ -1309,6 +1372,24 @@
       return true;
     }
 
+    function setMap(id) {
+      if (gameState !== "menu" || !["outpost", "lab"].includes(id)) return false;
+      currentMap = id;
+      document.querySelectorAll("[data-map]").forEach(button => {
+        const selected = button.dataset.map === id;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      });
+      buildMap();
+      if (player) {
+        player.x = 2.7;
+        player.y = 2.7;
+        player.dir = .08;
+        player.pitch = 0;
+      }
+      return true;
+    }
+
     function getWaveEnemyCount(waveNumber, profile = getDifficultyProfile()) {
       const baseCount = waveNumber === 5 ? 11 : 3 + waveNumber * 2;
       return Math.min(profile.maxEnemies, Math.max(1, Math.round(baseCount * profile.countScale)));
@@ -1319,6 +1400,7 @@
     let lastTime = performance.now();
     let elapsed = 0;
     let map = [];
+    let currentMap = "outpost";
     let player;
     let enemies = [];
     let grenades = [];
@@ -1330,6 +1412,10 @@
     let zBuffer = new Float32Array(W);
     let spriteCache = {};
     let currentWeapon = "rifle";
+    let marksmanUnlocked = false;
+    let medkits = 0;
+    let lotteryDrawn = false;
+    let lotteryPrize = null;
     let wave = 0;
     let score = 0;
     let kills = 0;
@@ -1369,7 +1455,7 @@
     const touchUI = Object.fromEntries([
       "touch-controls", "joystick", "joystick-knob", "touch-fire", "touch-aim", "touch-sprint",
       "touch-repair", "touch-reload", "touch-grenade", "touch-mine", "touch-switch", "touch-pause",
-      "touch-grenade-count", "touch-mine-count", "touch-weapon-slot"
+      "touch-medkit", "touch-medkit-count", "touch-grenade-count", "touch-mine-count", "touch-weapon-slot"
     ].map(id => [id, document.getElementById(id)]));
     const layoutUI = Object.fromEntries([
       "touch-layout-target", "touch-layout-x", "touch-layout-y", "touch-layout-size",
@@ -1377,7 +1463,7 @@
     ].map(id => [id, document.getElementById(id)]));
     const TOUCH_LAYOUT_IDS = [
       "joystick", "touch-sprint", "touch-fire", "touch-aim", "touch-repair",
-      "touch-mine", "touch-grenade", "touch-switch", "touch-reload", "touch-pause"
+      "touch-mine", "touch-grenade", "touch-switch", "touch-reload", "touch-pause", "touch-medkit"
     ];
     const TOUCH_LAYOUT_STORAGE_KEY = "NEON_BREACH_TOUCH_LAYOUT_V1";
     const cloneTouchProfile = profile => Object.fromEntries(Object.entries(profile).map(([id, value]) => [id, { ...value }]));
@@ -1501,6 +1587,7 @@
       else if (choice.id === "support-ammo") {
         weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + 24);
         weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + 6);
+        if (marksmanUnlocked) weapons.marksman.reserve = Math.min(120, weapons.marksman.reserve + 12);
       }
     }
 
@@ -1512,6 +1599,7 @@
       }
       weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + difficulty.rifleAmmo);
       weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + difficulty.shotgunAmmo);
+      if (marksmanUnlocked) weapons.marksman.reserve = Math.min(120, weapons.marksman.reserve + Math.max(4, Math.round(difficulty.rifleAmmo * .25)));
       player.health = Math.min(100, player.health + difficulty.clearHealth);
       player.armor = Math.min(100, player.armor + difficulty.clearArmor);
       updateHUD();
@@ -1817,7 +1905,7 @@
       player.mines = 4;
       for (const weapon of Object.values(weapons)) {
         weapon.mag = weapon.magSize;
-        weapon.reserve = weapon === weapons.rifle ? 240 : 64;
+        weapon.reserve = weapon === weapons.rifle ? 240 : weapon === weapons.shotgun ? 64 : 120;
       }
       isReloading = false;
       reloadTimer = 0;
@@ -1857,6 +1945,7 @@
       ui.crosshair.classList.remove("hit", "kill");
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
+      ui["lottery-screen"].classList.add("hidden");
       currentUpgradeChoices = [];
       player.x = 2.7;
       player.y = 2.7;
@@ -1869,6 +1958,10 @@
       wave = destination - 1;
       developer.targetWave = destination;
       refillDeveloperResources(false);
+      if (destination === LOTTERY_WAVE && !lotteryDrawn) {
+        developer.panelOpen = false;
+        developer.timeFrozen = false;
+      }
       nextWave();
       syncDeveloperUI();
       feed(`DEV：已載入第 <b>${destination}</b> 波`);
@@ -1921,7 +2014,9 @@
         "touch-grenade": point(actionStart + (actionWidth + actionGap) * 2, actionY),
         "touch-switch": point(actionStart + (actionWidth + actionGap) * 3, actionY),
         "touch-reload": point(actionStart + (actionWidth + actionGap) * 4, actionY),
-        "touch-pause": point(width - 12 - 23, 10 + 23)
+        "touch-pause": point(width - 12 - 23, 10 + 23),
+        "touch-medkit": point(shortLandscape ? 195 : narrowPortrait ? 56 : 76,
+          height - (shortLandscape ? 132 : narrowPortrait ? 309 : 255))
       };
     }
 
@@ -1934,14 +2029,21 @@
         for (const orientation of ["portrait", "landscape"]) {
           const profile = saved.layouts[orientation];
           if (!profile || typeof profile !== "object" || Array.isArray(profile)) continue;
-          const valid = TOUCH_LAYOUT_IDS.every(id => {
+          const validItem = id => {
             const item = profile[id];
             return item && typeof item === "object" && !Array.isArray(item) &&
               ["x", "y", "size"].every(key => typeof item[key] === "number" && Number.isFinite(item[key])) &&
               item.x >= 0 && item.x <= 100 && item.y >= 0 && item.y <= 100 &&
               item.size >= 60 && item.size <= 160;
-          });
-          if (valid) touchLayouts[orientation] = Object.fromEntries(TOUCH_LAYOUT_IDS.map(id => [id, { ...profile[id] }]));
+          };
+          // V8.2 saved ten controls; the new medical button gets its default
+          // without discarding any of those existing positions.
+          const previousIds = TOUCH_LAYOUT_IDS.filter(id => id !== "touch-medkit");
+          if (previousIds.every(validItem) && (!profile["touch-medkit"] || validItem("touch-medkit"))) {
+            touchLayouts[orientation] = Object.fromEntries(TOUCH_LAYOUT_IDS
+              .filter(id => profile[id])
+              .map(id => [id, { ...profile[id] }]));
+          }
         }
       } catch (_) {
         // localStorage may be unavailable for private browsing or file URLs.
@@ -1964,6 +2066,9 @@
     function ensureTouchLayoutProfile(orientation) {
       if (!touchLayoutDefaults[orientation]) touchLayoutDefaults[orientation] = makeTouchDefaultProfile(orientation);
       if (!touchLayouts[orientation]) touchLayouts[orientation] = cloneTouchProfile(touchLayoutDefaults[orientation]);
+      for (const id of TOUCH_LAYOUT_IDS) {
+        if (!touchLayouts[orientation][id]) touchLayouts[orientation][id] = { ...touchLayoutDefaults[orientation][id] };
+      }
       return touchLayouts[orientation];
     }
 
@@ -2080,6 +2185,23 @@
           if (!gaps.some(([gx, gy]) => gx === x && gy === y)) map[y][x] = type;
         }
       };
+      if (currentMap === "lab") {
+        // Research ring: side corridors lead around a wide central fighting area.
+        for (let i = 0; i < size; i++) {
+          map[0][i] = map[size - 1][i] = map[i][0] = map[i][size - 1] = 3;
+        }
+        wall(4, 5, 17, 5, 3, [[7, 5], [14, 5]]);
+        wall(4, 16, 17, 16, 3, [[6, 16], [15, 16]]);
+        wall(5, 7, 5, 14, 4, [[5, 9], [5, 13]]);
+        wall(16, 7, 16, 14, 4, [[16, 8], [16, 12]]);
+        wall(10, 1, 10, 4, 3, [[10, 3]]);
+        wall(11, 17, 11, 20, 3, [[11, 19]]);
+        wall(1, 10, 4, 10, 4, [[2, 10]]);
+        wall(17, 11, 20, 11, 4, [[19, 11]]);
+        [[8,8],[13,8],[8,13],[13,13],[10,10],[11,11],[3,17],[18,3]]
+          .forEach(([x, y], index) => { map[y][x] = index % 2 ? 4 : 3; });
+        return;
+      }
       wall(6, 2, 6, 8, 1, [[6, 5]]);
       wall(6, 12, 6, 19, 1, [[6, 16]]);
       wall(14, 2, 14, 9, 1, [[14, 6]]);
@@ -2112,10 +2234,18 @@
       weapons.shotgun.magSize = weapons.shotgun.baseMagSize;
       weapons.shotgun.mag = weapons.shotgun.magSize;
       weapons.shotgun.reserve = 32;
+      weapons.marksman.magSize = weapons.marksman.baseMagSize;
+      weapons.marksman.mag = weapons.marksman.magSize;
+      weapons.marksman.reserve = 60;
       currentWeapon = "rifle";
     }
 
     function resetGame() {
+      marksmanUnlocked = false;
+      medkits = 0;
+      lotteryDrawn = false;
+      lotteryPrize = null;
+      ui["lottery-screen"].classList.add("hidden");
       buildMap();
       resetWeapons();
       resetRunProgression();
@@ -2264,6 +2394,17 @@
     }
 
     function nextWave() {
+      if (wave + 1 === LOTTERY_WAVE && !lotteryDrawn) {
+        gameState = "lottery";
+        resetAllInput();
+        if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+        ui["lottery-result"].textContent = "準備好了就抽一次。";
+        ui["lottery-draw"].classList.remove("hidden");
+        ui["lottery-continue"].classList.add("hidden");
+        ui["lottery-screen"].classList.remove("hidden");
+        updateTouchVisibility();
+        return;
+      }
       wave++;
       const bossWave = wave % 5 === 0;
       const total = getWaveEnemyCount(wave);
@@ -2275,9 +2416,54 @@
       }
       if (bossWave) spawnEnemy("boss");
       const bossMark = Math.max(1, Math.floor(wave / 5));
-      showBanner(bossWave ? `第 ${wave} 波 // 重裝警報` : `第 ${wave} 波`, bossWave ? `偵測到鎮暴重裝單位 MK.${bossMark}` : "清除所有敵對單位", 2.7);
+      showBanner(bossWave ? `第 ${wave} 波 // 重裝警報` : `第 ${wave} 波`, bossWave ? `偵測到鎮暴重裝單位 MK.${bossMark}` : `${currentMap === "lab" ? "地下研究所" : "封鎖區"} // 清除所有敵對單位`, 2.7);
       feed(bossWave ? `<b>警告：</b>重裝單位 MK.${bossMark} 已進入區域` : `第 <b>${wave}</b> 波攻勢開始`);
       updateHUD();
+    }
+
+    function drawWave10Lottery() {
+      if (gameState !== "lottery" || lotteryDrawn || wave !== LOTTERY_WAVE - 1) return false;
+      lotteryDrawn = true;
+      const roll = Math.random();
+      lotteryPrize = roll < .50 ? "none" : roll < .75 ? "medkit" : roll < .95 ? "marksman" : "skip";
+      ui["lottery-draw"].classList.add("hidden");
+      if (lotteryPrize === "none") {
+        ui["lottery-result"].textContent = "沒中！繼續挑戰第 10 波。";
+      } else if (lotteryPrize === "medkit") {
+        medkits = 2;
+        ui["lottery-result"].textContent = "抽中醫療包 ×2！作戰中按 H 或觸控「醫療」，每次可將生命、護甲與體力補滿至 100。";
+      } else if (lotteryPrize === "marksman") {
+        marksmanUnlocked = true;
+        ui["lottery-result"].textContent = "抽中 L-9 穿甲精準槍！按 3 或用觸控「切槍」切換；單發精準，對重裝目標加成，但持續火力較低。";
+      } else {
+        ui["lottery-result"].textContent = "抽中 5% 頭獎：直達第 15 波！";
+        ui["lottery-screen"].classList.add("hidden");
+        gameState = "playing";
+        endlessMode = true;
+        extractionOffered = true;
+        lastResolvedWave = 14;
+        wave = 14;
+        enemies = []; grenades = []; mines = []; particles = []; pickups = []; tracers = []; decals = [];
+        waveDelay = 0;
+        nextWave();
+        showBanner("第 15 波 // 頭獎直達", "無盡作戰 · 鎮暴重裝單位 MK.3", 3.4);
+        feed("<b>抽獎頭獎：</b>已跳過第 10～14 波，直接進入第 15 波");
+        updateTouchVisibility();
+        if (!touchMode) requestDesktopLock();
+      }
+      if (lotteryPrize !== "skip") ui["lottery-continue"].classList.remove("hidden");
+      updateHUD();
+      return lotteryPrize;
+    }
+
+    function continueAfterLottery() {
+      if (gameState !== "lottery" || !lotteryDrawn || lotteryPrize === "skip") return false;
+      ui["lottery-screen"].classList.add("hidden");
+      gameState = "playing";
+      nextWave();
+      updateTouchVisibility();
+      if (!touchMode) requestDesktopLock();
+      return true;
     }
 
     function showBanner(title, sub, duration = 2) {
@@ -2350,6 +2536,7 @@
     function sfx(name) {
       if (name === "rifle") { noise(.055, .22, 2500); tone(128, .065, "sawtooth", .22, .55); }
       else if (name === "shotgun") { noise(.16, .34, 1500); tone(92, .17, "square", .25, .42); }
+      else if (name === "marksman") { noise(.09, .2, 2000); tone(275, .12, "sawtooth", .16, .42); }
       else if (name === "empty") tone(270, .045, "square", .09, .72);
       else if (name === "reload") tone(460, .05, "square", .07, .76);
       else if (name === "pickup") { tone(620, .08, "sine", .1, 1.25); setTimeout(() => tone(900, .1, "sine", .08, 1.12), 55); }
@@ -2447,7 +2634,12 @@
     function collectPickup(p) {
       if (p.type === "health") { player.health = Math.min(100, player.health + 30); toast("醫療修復 +30"); }
       else if (p.type === "armor") { player.armor = Math.min(100, player.armor + 35); toast("護甲補充 +35"); }
-      else if (p.type === "ammo") { weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + 45); weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + 10); toast("彈藥已補充"); }
+      else if (p.type === "ammo") {
+        weapons.rifle.reserve = Math.min(240, weapons.rifle.reserve + 45);
+        weapons.shotgun.reserve = Math.min(64, weapons.shotgun.reserve + 10);
+        if (marksmanUnlocked) weapons.marksman.reserve = Math.min(120, weapons.marksman.reserve + 14);
+        toast("彈藥已補充");
+      }
       else if (p.type === "grenade") { player.grenades = Math.min(5, player.grenades + 1); toast("破片手雷 +1"); }
       else { player.mines = Math.min(4, player.mines + 1); toast("感應地雷 +1"); }
       sfx("pickup");
@@ -2456,7 +2648,7 @@
     }
 
     function switchWeapon(name) {
-      if (!canPlayerControl() || !weapons[name] || name === currentWeapon) return;
+      if (!canPlayerControl() || !weapons[name] || (name === "marksman" && !marksmanUnlocked) || name === currentWeapon) return;
       currentWeapon = name;
       isReloading = false;
       reloadTimer = 0;
@@ -2464,6 +2656,27 @@
       fireTimer = Math.max(fireTimer, .22);
       sfx("reload");
       updateHUD();
+    }
+
+    function cycleWeapon() {
+      const available = marksmanUnlocked ? ["rifle", "shotgun", "marksman"] : ["rifle", "shotgun"];
+      switchWeapon(available[(available.indexOf(currentWeapon) + 1) % available.length]);
+    }
+
+    function useMedkit() {
+      if (!canPlayerControl() || medkits <= 0 || !player) return false;
+      if (player.health >= 100 && player.armor >= 100 && player.stamina >= 100) {
+        toast("狀態已全滿，醫療包已保留");
+        return false;
+      }
+      medkits--;
+      player.health = 100;
+      player.armor = 100;
+      player.stamina = 100;
+      sfx("pickup");
+      toast(`醫療包已使用 · 剩餘 ${medkits} 個`);
+      updateHUD();
+      return true;
     }
 
     function startReload() {
@@ -2543,11 +2756,12 @@
         if (target) {
           let dmg = w.damage * getUpgradeModifier("damage");
           if (currentWeapon === "shotgun") dmg *= clamp(1.15 - targetDist / w.range * .65, .48, 1);
+          if (currentWeapon === "marksman" && ["trooper", "boss"].includes(target.type)) dmg *= 1.25;
           damageEnemy(target, dmg, "槍械");
           anyHit = true;
           spawnImpact(target.x, target.y, enemyTypes[target.type].color, 3);
         } else {
-          spawnImpact(wallHit.x, wallHit.y, wallHit.tile === 2 ? "#4de7ff" : "#f5b55f", 2);
+          spawnImpact(wallHit.x, wallHit.y, wallHit.tile === 4 ? "#a6ffb4" : wallHit.tile === 3 ? "#bb9bff" : wallHit.tile === 2 ? "#4de7ff" : "#f5b55f", 2);
         }
         tracers.push({ angle: shotAngle, dist: targetDist, life: .075, color: w.color });
       }
@@ -2858,11 +3072,15 @@
       ui["ammo-reserve"].textContent = pad(w.reserve, 3);
       ui["grenade-count"].textContent = player.grenades;
       ui["mine-count"].textContent = player.mines;
+      ui["medkit-count"].textContent = medkits;
+      ui["medkit-hud"].classList.toggle("visible", medkits > 0 && gameState === "playing");
       ui["reload-prompt"].textContent = touchMode ? "點一下「換彈」重新裝填" : "[ R ] 重新裝填";
       ui["reload-prompt"].classList.toggle("show", w.mag === 0 && w.reserve > 0 && !isReloading && !isRepairing());
       touchUI["touch-grenade-count"].textContent = player.grenades;
       touchUI["touch-mine-count"].textContent = player.mines;
-      touchUI["touch-weapon-slot"].textContent = currentWeapon === "rifle" ? "1 / 2" : "2 / 2";
+      touchUI["touch-medkit-count"].textContent = medkits;
+      touchUI["touch-medkit"].classList.toggle("unlocked", medkits > 0 && gameState === "playing");
+      touchUI["touch-weapon-slot"].textContent = `${["rifle", "shotgun", "marksman"].indexOf(currentWeapon) + 1} / ${marksmanUnlocked ? 3 : 2}`;
       ui.crosshair.style.setProperty("--spread", `${Math.min(9, recoil * 2.6 + (player.moving || 0) * 1.3)}px`);
       const boss = enemies.find(e => e.type === "boss" && !e.dead);
       ui["boss-bar"].classList.toggle("visible", !!boss);
@@ -2961,12 +3179,17 @@
       ctx.translate(shakeX, shakeY);
 
       const ceiling = ctx.createLinearGradient(0, 0, 0, horizon);
-      ceiling.addColorStop(0, "#02050a"); ceiling.addColorStop(.7, "#071019"); ceiling.addColorStop(1, "#0b1a22");
+      ceiling.addColorStop(0, "#02050a");
+      ceiling.addColorStop(.7, currentMap === "lab" ? "#110e20" : "#071019");
+      ceiling.addColorStop(1, currentMap === "lab" ? "#1b1b2d" : "#0b1a22");
       ctx.fillStyle = ceiling; ctx.fillRect(-20, -20, W + 40, horizon + 20);
       const floor = ctx.createLinearGradient(0, horizon, 0, H);
-      floor.addColorStop(0, "#17252c"); floor.addColorStop(.18, "#091218"); floor.addColorStop(1, "#020408");
+      floor.addColorStop(0, currentMap === "lab" ? "#242333" : "#17252c");
+      floor.addColorStop(.18, currentMap === "lab" ? "#11101c" : "#091218");
+      floor.addColorStop(1, "#020408");
       ctx.fillStyle = floor; ctx.fillRect(-20, horizon, W + 40, H - horizon + 30);
-      ctx.fillStyle = "rgba(58, 220, 245, .055)"; ctx.fillRect(-20, horizon - 2, W + 40, 4);
+      ctx.fillStyle = currentMap === "lab" ? "rgba(166, 132, 250, .07)" : "rgba(58, 220, 245, .055)";
+      ctx.fillRect(-20, horizon - 2, W + 40, 4);
 
       const rayStep = CFG.rayStep;
       for (let sx = 0; sx < W; sx += rayStep) {
@@ -2978,18 +3201,25 @@
         const top = horizon - wallH / 2;
         const fog = clamp(corrected / 20, 0, .78);
         const sideShade = hit.side ? .72 : 1;
-        const pulse = hit.tile === 2 ? .5 + Math.sin(elapsed * 2.2 + hit.tex * 8) * .12 : 0;
-        let r = hit.tile === 2 ? 32 : 44, g = hit.tile === 2 ? 132 : 66, b = hit.tile === 2 ? 150 : 77;
+        const litPanel = hit.tile === 2 || hit.tile === 4;
+        const pulse = litPanel ? .5 + Math.sin(elapsed * 2.2 + hit.tex * 8) * .12 : 0;
+        const base = hit.tile === 2 ? [32, 132, 150] : hit.tile === 3 ? [88, 62, 133]
+          : hit.tile === 4 ? [42, 129, 105] : [44, 66, 77];
+        let [r, g, b] = base;
         const panel = (Math.floor(hit.tex * 8) % 2) ? .88 : 1;
         r *= sideShade * panel; g *= sideShade * panel; b *= sideShade * panel;
         r = lerp(r + pulse * 20, 3, fog); g = lerp(g + pulse * 80, 7, fog); b = lerp(b + pulse * 90, 11, fog);
         ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
         ctx.fillRect(sx, top, rayStep + 1, wallH);
-        if (hit.tile === 2 && (hit.tex < .045 || hit.tex > .955)) {
-          ctx.fillStyle = `rgba(77,231,255,${clamp(.7 - corrected / 25, .08, .55)})`;
+        if (litPanel && (hit.tex < .045 || hit.tex > .955)) {
+          ctx.fillStyle = hit.tile === 4
+            ? `rgba(101,242,160,${clamp(.7 - corrected / 25, .08, .55)})`
+            : `rgba(77,231,255,${clamp(.7 - corrected / 25, .08, .55)})`;
           ctx.fillRect(sx, top, rayStep + 1, wallH);
-        } else if (hit.tile === 1 && Math.abs(hit.tex - .5) < .018) {
-          ctx.fillStyle = `rgba(255,182,72,${clamp(.45 - corrected / 30, .04, .34)})`;
+        } else if ((hit.tile === 1 || hit.tile === 3) && Math.abs(hit.tex - .5) < .018) {
+          ctx.fillStyle = hit.tile === 3
+            ? `rgba(181,143,255,${clamp(.45 - corrected / 30, .04, .34)})`
+            : `rgba(255,182,72,${clamp(.45 - corrected / 30, .04, .34)})`;
           ctx.fillRect(sx, top, rayStep + 1, wallH);
         }
         for (let x = sx; x < Math.min(W, sx + rayStep); x++) zBuffer[x] = corrected;
@@ -3121,7 +3351,7 @@
         ctx.fillStyle = "#263842"; ctx.fillRect(-126,-57,132,29); ctx.fillStyle = w.color; ctx.shadowBlur=12; ctx.shadowColor=w.color; ctx.fillRect(-105,-50,61,4); ctx.shadowBlur=0;
         ctx.fillStyle = "#090e12"; ctx.fillRect(130,-48,87,18); ctx.fillStyle="#314852"; ctx.fillRect(205,-46,28,14);
         if (fireTimer > getWeaponFireDelay(w) - .045 && w.mag >= 0) drawMuzzle(238,-39,w.color,1);
-      } else {
+      } else if (currentWeapon === "shotgun") {
         ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.beginPath(); ctx.ellipse(0,-28,160,48,0,0,TAU); ctx.fill();
         ctx.fillStyle="#182832"; ctx.strokeStyle="#50636a"; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(-152,-59); ctx.lineTo(86,-76); ctx.lineTo(164,-45); ctx.lineTo(130,-15); ctx.lineTo(-91,-12); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -3129,6 +3359,18 @@
         ctx.fillStyle="#283943"; ctx.fillRect(91,-57,117,18); ctx.fillStyle="#081014"; ctx.fillRect(201,-56,34,16);
         ctx.fillStyle="#10191e"; ctx.beginPath(); ctx.moveTo(-45,-13); ctx.lineTo(12,-13); ctx.lineTo(-8,54); ctx.lineTo(-51,47); ctx.closePath(); ctx.fill();
         if (fireTimer > getWeaponFireDelay(w) - .075 && w.mag >= 0) drawMuzzle(240,-48,w.color,1.45);
+      } else {
+        ctx.fillStyle = "rgba(0,0,0,.36)"; ctx.beginPath(); ctx.ellipse(12,-32,146,44,0,0,TAU); ctx.fill();
+        ctx.fillStyle = "#20202e"; ctx.strokeStyle = "#765f9e"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-132,-54); ctx.lineTo(-43,-76); ctx.lineTo(90,-62); ctx.lineTo(152,-38); ctx.lineTo(135,-16); ctx.lineTo(-93,-13); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#2e2a40"; ctx.fillRect(-35,-99,72,24);
+        ctx.fillStyle = "#10101c"; ctx.fillRect(-18,-94,41,12);
+        ctx.fillStyle = "#0d0e19"; ctx.beginPath(); ctx.moveTo(-20,-15); ctx.lineTo(23,-15); ctx.lineTo(6,48); ctx.lineTo(-25,43); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = w.color; ctx.shadowBlur = 12; ctx.shadowColor = w.color;
+        ctx.fillRect(-109,-49,77,4); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#15131e"; ctx.fillRect(138,-45,104,11);
+        ctx.fillStyle = "#8e78bf"; ctx.fillRect(233,-43,20,7);
+        if (fireTimer > getWeaponFireDelay(w) - .06 && w.mag >= 0) drawMuzzle(254,-40,w.color,.8);
       }
       if (isReloading) {
         const progress = 1 - reloadTimer / getWeaponReloadTime(w);
@@ -3146,7 +3388,7 @@
     function renderMenuScene() {
       if (!player) { buildMap(); player = { x: 2.7, y: 2.7, dir: 0, pitch: 0, bob: 0, moving: 0 }; }
       player.dir = (player.dir + .0007) % TAU;
-      const sky = ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,"#03060b"); sky.addColorStop(.55,"#0a1820"); sky.addColorStop(1,"#020407");
+      const sky = ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,"#03060b"); sky.addColorStop(.55,currentMap === "lab" ? "#171127" : "#0a1820"); sky.addColorStop(1,"#020407");
       ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
       const oldEnemies = enemies;
       if (!enemies.length) enemies = [{ type:"boss", x:8.5, y:3.5, hp:780,maxHp:780, dead:false, hitFlash:0, anim:elapsed }];
@@ -3360,6 +3602,7 @@
       ui["pause-screen"].classList.add("hidden");
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
+      ui["lottery-screen"].classList.add("hidden");
       ui.hud.classList.add("visible");
       syncDeveloperUI();
       updateHUD();
@@ -3400,6 +3643,7 @@
       developer.timeFrozen = false;
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
+      ui["lottery-screen"].classList.add("hidden");
       if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
       ui["final-wave-label"].textContent = endlessMode ? "無盡抵達波次" : "抵達波次";
       if (developer.runActive && endlessMode) ui["gameover-copy"].textContent = `開發者無盡測試於第 ${wave} 波結束；本次分數不列入最高紀錄。`;
@@ -3424,6 +3668,7 @@
       developer.timeFrozen = false;
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
+      ui["lottery-screen"].classList.add("hidden");
       if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
       ui["victory-copy"].textContent = developer.runActive ? "你已在第 10 波後安全撤離。此為開發者作戰，分數不列入最高紀錄。" : "你已清除第 10 波並安全撤離，作戰完成。";
       ui["victory-wave"].textContent = pad(wave, 2);
@@ -3448,6 +3693,7 @@
       ui["pause-screen"].classList.add("hidden");
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
+      ui["lottery-screen"].classList.add("hidden");
       ui["start-screen"].classList.remove("hidden");
       ui.hud.classList.remove("visible");
       updateTouchVisibility();
@@ -3462,6 +3708,12 @@
     document.getElementById("victory-menu-btn").addEventListener("click", returnToMenu);
     document.getElementById("extract-btn").addEventListener("click", chooseExtraction);
     document.getElementById("endless-btn").addEventListener("click", chooseEndless);
+    document.getElementById("lottery-draw").addEventListener("click", drawWave10Lottery);
+    document.getElementById("lottery-continue").addEventListener("click", continueAfterLottery);
+    document.getElementById("medkit-hud").addEventListener("click", event => { event.stopPropagation(); useMedkit(); });
+    document.querySelectorAll("[data-map]").forEach(button => {
+      button.addEventListener("click", () => setMap(button.dataset.map));
+    });
     document.querySelectorAll("[data-upgrade-slot]").forEach(button => {
       button.addEventListener("click", () => applyUpgradeChoice(Number(button.dataset.upgradeSlot)));
     });
@@ -3551,7 +3803,7 @@
         e.preventDefault();
         return;
       }
-      if (gameState === "upgrade" || gameState === "extraction") {
+      if (gameState === "upgrade" || gameState === "extraction" || gameState === "lottery") {
         if (e.code === "Tab" || e.target?.tagName === "BUTTON") return;
         e.preventDefault();
         return;
@@ -3576,9 +3828,11 @@
       }
       else if (e.code === "Digit1") switchWeapon("rifle");
       else if (e.code === "Digit2") switchWeapon("shotgun");
+      else if (e.code === "Digit3") switchWeapon("marksman");
       else if (e.code === "KeyR" && gameState === "playing") startReload();
       else if (e.code === "KeyG") throwGrenade();
       else if (e.code === "KeyM") placeMine();
+      else if (e.code === "KeyH") useMedkit();
       else if (e.code === "KeyF" && gameState !== "menu") toggleFullscreen();
       else if (e.code === "Escape" && touchMode && gameState === "playing") pauseGame();
     });
@@ -3601,6 +3855,7 @@
       }
       if (e.pointerType !== "mouse" || (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) return;
       if (touchUI["touch-controls"].contains(e.target)) return;
+      if (e.target.closest?.("#medkit-hud")) return;
       lastPointerKind = "mouse";
       if (controlPreference === "auto" && touchMode && gameState !== "playing") setTouchMode(false);
       if (touchMode || !canPlayerControl()) return;
@@ -3644,7 +3899,8 @@
     bindTouchAction("touch-reload", startReload);
     bindTouchAction("touch-grenade", throwGrenade);
     bindTouchAction("touch-mine", placeMine);
-    bindTouchAction("touch-switch", () => switchWeapon(currentWeapon === "rifle" ? "shotgun" : "rifle"));
+    bindTouchAction("touch-switch", cycleWeapon);
+    bindTouchAction("touch-medkit", useMedkit);
     bindTouchAction("touch-pause", pauseGame);
     document.getElementById("touch-fullscreen").addEventListener("click", toggleFullscreen);
 
@@ -3757,7 +4013,13 @@
           boss: boss ? { tier: boss.bossTier, hp: boss.hp, maxHp: boss.maxHp, damage: boss.damage, speed: boss.speed } : null
         };
       },
+      get lottery() {
+        return { drawn: lotteryDrawn, prize: lotteryPrize, medkits, marksmanUnlocked };
+      },
+      get selectedMap() { return currentMap; },
+      get mapGrid() { return map.map(row => [...row]); },
       setDifficulty,
+      setMap,
       getWaveEnemyCount: waveNumber => getWaveEnemyCount(Math.max(1, Math.floor(Number(waveNumber) || 1))),
       setFpsLimit,
       start: () => beginGame(false),
@@ -3777,6 +4039,10 @@
       chooseExtraction,
       chooseEndless,
       chooseUpgrade: applyUpgradeChoice,
+      drawLottery: drawWave10Lottery,
+      continueLottery: continueAfterLottery,
+      useMedkit,
+      switchWeapon,
       clearWave: () => {
         if (gameState !== "playing") return false;
         for (const enemy of enemies) enemy.dead = true;
