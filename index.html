@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V9：新增地下研究所地圖，抵達第 10 波可抽取醫療包、新槍或直達第 15 波。">
-  <title>NEON BREACH V9 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V10：記住 FPS 設定、新增省電模式，每進入十波關卡前皆可抽獎。">
+  <title>NEON BREACH V10 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -414,6 +414,8 @@
     .setting-row span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .setting-row output { color: var(--cyan); font: 700 11px/1 monospace; }
     .setting-row input { width: 100%; accent-color: var(--cyan); cursor: pointer; }
+    .power-setting { display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #a8c2c9; font-size: 13px; }
+    .power-setting input { width: 20px; height: 20px; margin: 0; accent-color: var(--green); cursor: pointer; }
     .setting-row select {
       width: 124px; padding: 7px 8px; color: #def8ff; background: #101e28;
       border: 1px solid var(--line); border-radius: 4px; font-size: 13px; cursor: pointer;
@@ -930,12 +932,12 @@
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V9</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V10</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V9 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V10 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
@@ -948,7 +950,7 @@
             <button class="map-card active" data-map="outpost" type="button" aria-pressed="true"><strong>01 // 封鎖區</strong><span>原始設施 · 多條掩護路線</span></button>
             <button class="map-card" data-map="lab" type="button" aria-pressed="false"><strong>02 // 地下研究所</strong><span>環形走廊 · 中央實驗區</span></button>
           </div>
-          <p class="run-rules">每清除三波可選擇一項小幅強化；進入第 10 波可抽獎一次，通過後可撤離或進入無盡作戰。</p>
+          <p class="run-rules">每清除三波可選擇一項小幅強化；第 10、20、30……波前各可抽獎一次。通過第 10 波後可撤離或進入無盡作戰。</p>
           <button class="primary-btn" id="start-btn" type="button">進入封鎖區</button>
           <div class="controls-grid" id="desktop-controls" aria-label="操作方式">
             <div class="control"><span>移動</span><kbd>WASD</kbd></div>
@@ -962,12 +964,14 @@
             <div class="control"><span>使用醫療包*</span><kbd>H</kbd></div>
             <div class="control"><span>暫停</span><kbd>ESC</kbd></div>
           </div>
-          <div class="settings-note mouse-help">* 第 10 波抽中對應獎勵後才會解鎖。</div>
-          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每三波可選擇一項升級，第 10 波抽獎；抽中醫療包後才會出現使用鍵。<br>可多指同時操作，建議橫向握持。</div>
+          <div class="settings-note mouse-help">* 每逢十波關卡前抽中對應獎勵後才會解鎖。</div>
+          <div class="touch-help">左側搖桿移動，拖曳空白畫面轉動視角。<br>射擊鈕可按住並拖曳；瞄準、衝刺點一下切換。<br>按住「修補」每 0.75 秒恢復 1 點護甲；修補時無法移動、射擊或換彈。<br>每三波可選擇一項升級，每逢十波關卡前抽獎；抽中醫療包後才會出現使用鍵。<br>可多指同時操作，建議橫向握持。</div>
           <div class="settings-stack">
             <label class="setting-row"><span>視角靈敏度 <output data-sensitivity-output>1.00×</output></span><input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="視角靈敏度"></label>
             <label class="setting-row"><span>音效音量</span><input id="volume" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="音效音量"></label>
             <label class="setting-row"><span>FPS 上限</span><select data-fps-limit aria-label="FPS 上限"><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="0">無上限</option></select></label>
+            <label class="power-setting"><span>省電模式</span><input type="checkbox" data-power-saving role="switch" aria-label="省電模式"></label>
+            <div class="settings-note">FPS 與省電模式會自動記住。省電模式略減渲染解析度與特效，主選單以 30 FPS 顯示，作戰沿用所選 FPS。</div>
             <div class="settings-note mouse-help">滑鼠可自由左右轉向與上下俯仰；瞄準時會自動降低靈敏度。按住 F 修補時無法移動、射擊或換彈。</div>
             <div class="settings-note touch-help">靈敏度也適用於手指拖曳；瞄準時會自動降低靈敏度。</div>
           </div>
@@ -981,12 +985,13 @@
       <div class="dialog">
         <div class="code">TACTICAL PAUSE</div>
         <h2>行動暫停</h2>
-        <p>作戰時間已暫停，可在此調整視角靈敏度與 FPS 上限。</p>
+        <p>作戰時間已暫停，可調整靈敏度、FPS 與省電模式。</p>
         <label class="pause-setting">
           <div><span>視角靈敏度</span><output data-sensitivity-output>1.00×</output></div>
           <input data-sensitivity type="range" min="0.25" max="2.5" value="1" step="0.05" aria-label="暫停畫面的視角靈敏度">
         </label>
         <label class="control-select" style="margin:0 0 16px">FPS 上限<select data-fps-limit aria-label="暫停畫面的 FPS 上限"><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="0">無上限</option></select></label>
+        <label class="power-setting" style="margin:0 0 16px"><span>省電模式</span><input type="checkbox" data-power-saving role="switch" aria-label="暫停畫面的省電模式"></label>
         <label class="control-select" style="margin:0 0 16px">操作模式<select data-control-mode aria-label="暫停畫面的操作模式"><option value="auto">自動偵測</option><option value="touch">觸控搖桿</option><option value="desktop">鍵盤滑鼠</option></select></label>
         <button class="secondary-btn touch-only" id="touch-layout-pause-btn" type="button">自訂觸控配置</button>
         <button class="primary-btn" id="resume-btn" type="button">繼續行動</button>
@@ -1098,10 +1103,10 @@
 
     <section class="overlay hidden" id="lottery-screen" role="dialog" aria-modal="true" aria-labelledby="lottery-title">
       <div class="dialog lottery-dialog">
-        <div class="code">WAVE 10 // 補給抽獎</div>
+        <div class="code">WAVE <span id="lottery-wave">10</span> // 補給抽獎</div>
         <h2 id="lottery-title">第 10 波抽獎</h2>
-        <p>進入第 10 波前可抽獎一次。本局只有這一次機會。</p>
-        <div class="lottery-odds">沒中 50% · 醫療包 ×2 25%<br>穿甲精準槍 20% · 直達第 15 波 5%</div>
+        <p>第 10、20、30……波前各可抽獎一次。</p>
+        <div class="lottery-odds" id="lottery-odds">沒中 50% · 醫療包 ×2 25%<br>穿甲精準槍 20% · 直達第 15 波 5%</div>
         <div id="lottery-result" role="status" aria-live="polite">準備好了就抽一次。</div>
         <button class="primary-btn" id="lottery-draw" type="button">抽一次</button>
         <button class="primary-btn hidden" id="lottery-continue" type="button">開始第 10 波</button>
@@ -1185,11 +1190,13 @@
     const TAU = Math.PI * 2;
     const FOV_BASE = 72 * Math.PI / 180;
     const EXTRACTION_WAVE = 10;
-    const LOTTERY_WAVE = 10;
+    const LOTTERY_INTERVAL = 10;
     const UPGRADE_INTERVAL = 3;
     const DEVELOPER_MAX_WAVE = 99;
     const RESUME_COUNTDOWN_MS = 3000;
     const MASTER_VOLUME_SCALE = 0.36;
+    const GRENADE_PHYSICS_STEP = 1 / 120;
+    const GRAPHICS_STORAGE_KEY = "NEON_BREACH_GRAPHICS_V1";
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d", { alpha: false });
     const ui = Object.fromEntries([
@@ -1198,7 +1205,7 @@
       "ammo-mag", "ammo-reserve", "grenade-count", "mine-count", "crosshair",
       "reload-prompt", "event-feed", "wave-banner", "wave-title", "wave-sub",
       "damage-flash", "toast", "start-screen", "pause-screen", "resume-countdown-screen", "resume-countdown-number",
-      "touch-layout-screen", "lottery-screen", "lottery-result", "lottery-draw", "lottery-continue",
+      "touch-layout-screen", "lottery-screen", "lottery-wave", "lottery-title", "lottery-odds", "lottery-result", "lottery-draw", "lottery-continue",
       "extraction-screen", "upgrade-screen", "gameover-screen", "victory-screen",
       "boss-bar", "boss-fill", "boss-hp-text", "boss-title", "final-wave", "final-wave-label", "final-score", "high-score",
       "victory-wave", "victory-kills", "victory-score", "difficulty-summary", "gameover-copy", "victory-copy",
@@ -1290,6 +1297,7 @@
       difficultyKey: "specops",
       volume: 0.65,
       fpsLimit: 60,
+      powerSaving: false,
       sensitivity: 1,
       enemyDamageScale: 0.85,
       armorRepairInterval: 0.75,
@@ -1404,6 +1412,7 @@
     let player;
     let enemies = [];
     let grenades = [];
+    let grenadePhysicsBudget = 0;
     let mines = [];
     let particles = [];
     let pickups = [];
@@ -1414,7 +1423,8 @@
     let currentWeapon = "rifle";
     let marksmanUnlocked = false;
     let medkits = 0;
-    let lotteryDrawn = false;
+    const lotteryDrawnWaves = new Set();
+    let lotteryTargetWave = 0;
     let lotteryPrize = null;
     let wave = 0;
     let score = 0;
@@ -1430,6 +1440,7 @@
     let waveDelay = 0;
     let bannerTimer = 0;
     let fireTimer = 0;
+    let muzzleFlashTimer = 0;
     let reloadTimer = 0;
     let reloadCycle = 0;
     let isReloading = false;
@@ -1444,6 +1455,7 @@
     let masterGain = null;
     let lastAnimationFrameTime = 0;
     let frameBudget = 0;
+    let lastPowerSaveSceneKey = "";
     let resumeCountdownEnd = 0;
     let resumeCountdownSecond = 0;
 
@@ -1574,6 +1586,7 @@
       if (currentUpgradeChoices.length !== 3) return false;
       gameState = "upgrade";
       resetAllInput();
+      clearCombatFeedback();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       renderUpgradeChoices();
       ui["upgrade-screen"].classList.remove("hidden");
@@ -1646,6 +1659,7 @@
       extractionOffered = true;
       gameState = "extraction";
       resetAllInput();
+      clearCombatFeedback();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       progressionUI["extraction-score"].textContent = score.toLocaleString("zh-TW");
       progressionUI["extraction-kills"].textContent = kills.toLocaleString("zh-TW");
@@ -1688,7 +1702,28 @@
       return true;
     }
 
-    function setFpsLimit(value) {
+    function loadGraphicsSettings() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(GRAPHICS_STORAGE_KEY));
+        if (!saved || saved.version !== 1) return;
+        if ([0, 30, 60, 120].includes(saved.fpsLimit)) CFG.fpsLimit = saved.fpsLimit;
+        if (typeof saved.powerSaving === "boolean") CFG.powerSaving = saved.powerSaving;
+      } catch (_) {
+        // Keep the default settings if storage is blocked or malformed.
+      }
+    }
+
+    function saveGraphicsSettings() {
+      try {
+        window.localStorage.setItem(GRAPHICS_STORAGE_KEY, JSON.stringify({
+          version: 1, fpsLimit: CFG.fpsLimit, powerSaving: CFG.powerSaving
+        }));
+      } catch (_) {
+        // Settings still work for this session if the browser cannot save them.
+      }
+    }
+
+    function setFpsLimit(value, persist = true) {
       const parsed = Number(value);
       CFG.fpsLimit = [0, 30, 60, 120].includes(parsed) ? parsed : 60;
       document.querySelectorAll("[data-fps-limit]").forEach(control => {
@@ -1697,7 +1732,19 @@
       lastAnimationFrameTime = 0;
       frameBudget = 0;
       lastTime = performance.now();
+      if (persist) saveGraphicsSettings();
       return CFG.fpsLimit;
+    }
+
+    function setPowerSaving(enabled, persist = true) {
+      CFG.powerSaving = Boolean(enabled);
+      document.querySelectorAll("[data-power-saving]").forEach(control => { control.checked = CFG.powerSaving; });
+      lastAnimationFrameTime = 0;
+      frameBudget = 0;
+      lastTime = performance.now();
+      resize();
+      if (persist) saveGraphicsSettings();
+      return CFG.powerSaving;
     }
 
     function shouldProcessFrame(now) {
@@ -1707,8 +1754,10 @@
       }
       const frameDelta = Math.min(250, Math.max(0, now - lastAnimationFrameTime));
       lastAnimationFrameTime = now;
-      if (CFG.fpsLimit === 0) return true;
-      const frameInterval = 1000 / CFG.fpsLimit;
+      const effectiveLimit = CFG.powerSaving && gameState === "menu"
+        ? (CFG.fpsLimit === 0 ? 30 : Math.min(30, CFG.fpsLimit)) : CFG.fpsLimit;
+      if (effectiveLimit === 0) return true;
+      const frameInterval = 1000 / effectiveLimit;
       frameBudget += frameDelta;
       if (frameBudget + .35 < frameInterval) return false;
       frameBudget = frameBudget > frameInterval * 2 ? 0 : Math.max(0, frameBudget - frameInterval);
@@ -1761,6 +1810,7 @@
       if (gameState !== "playing" || developer.panelOpen || developer.timeFrozen) return false;
       cancelResumeCountdown();
       resetAllInput();
+      clearCombatFeedback();
       const now = performance.now();
       resumeCountdownEnd = now + RESUME_COUNTDOWN_MS;
       resumeCountdownSecond = 0;
@@ -1857,6 +1907,7 @@
       developer.panelOpen = true;
       developer.targetWave = clamp(wave || 1, 1, DEVELOPER_MAX_WAVE);
       resetAllInput();
+      clearCombatFeedback();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       syncDeveloperUI();
       updateHUD();
@@ -1882,6 +1933,7 @@
       lastTime = performance.now();
       if (developer.timeFrozen) {
         cancelResumeCountdown();
+        clearCombatFeedback();
         if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       }
       syncDeveloperUI();
@@ -1911,6 +1963,7 @@
       reloadTimer = 0;
       reloadCycle++;
       fireTimer = 0;
+      muzzleFlashTimer = 0;
       updateHUD();
       if (showMessage) toast("DEV：全部資源已補滿");
       return true;
@@ -1920,6 +1973,7 @@
       if (!developer.runActive || gameState !== "playing") return false;
       const destination = clamp(Math.round(Number(targetWave) || 1), 1, DEVELOPER_MAX_WAVE);
       resetAllInput();
+      clearCombatFeedback();
       isReloading = false;
       reloadTimer = 0;
       reloadCycle++;
@@ -1935,6 +1989,7 @@
       bannerTimer = 0;
       enemies = [];
       grenades = [];
+      grenadePhysicsBudget = 0;
       mines = [];
       particles = [];
       pickups = [];
@@ -1958,7 +2013,7 @@
       wave = destination - 1;
       developer.targetWave = destination;
       refillDeveloperResources(false);
-      if (destination === LOTTERY_WAVE && !lotteryDrawn) {
+      if (destination % LOTTERY_INTERVAL === 0 && !lotteryDrawnWaves.has(destination)) {
         developer.panelOpen = false;
         developer.timeFrozen = false;
       }
@@ -2220,6 +2275,11 @@
       // Preserve the actual portrait/landscape aspect ratio on touch displays.
       W = touchMode ? Math.max(1, Math.round(viewW * scale)) : Math.max(640, Math.floor(innerWidth * scale));
       H = touchMode ? Math.max(1, Math.round(viewH * scale)) : Math.max(360, Math.floor(innerHeight * scale));
+      if (CFG.powerSaving) {
+        W = Math.max(1, Math.round(W * .9));
+        H = Math.max(1, Math.round(H * .9));
+      }
+      lastPowerSaveSceneKey = "";
       canvas.width = W;
       canvas.height = H;
       horizon = H * .49;
@@ -2241,9 +2301,11 @@
     }
 
     function resetGame() {
+      clearCombatFeedback();
       marksmanUnlocked = false;
       medkits = 0;
-      lotteryDrawn = false;
+      lotteryDrawnWaves.clear();
+      lotteryTargetWave = 0;
       lotteryPrize = null;
       ui["lottery-screen"].classList.add("hidden");
       buildMap();
@@ -2255,6 +2317,7 @@
       };
       enemies = [];
       grenades = [];
+      grenadePhysicsBudget = 0;
       mines = [];
       particles = [];
       pickups = [];
@@ -2394,11 +2457,20 @@
     }
 
     function nextWave() {
-      if (wave + 1 === LOTTERY_WAVE && !lotteryDrawn) {
+      lastPowerSaveSceneKey = "";
+      const incomingWave = wave + 1;
+      if (incomingWave % LOTTERY_INTERVAL === 0 && !lotteryDrawnWaves.has(incomingWave)) {
+        lotteryTargetWave = incomingWave;
+        lotteryPrize = null;
         gameState = "lottery";
         resetAllInput();
+        clearCombatFeedback();
         if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+        ui["lottery-wave"].textContent = String(incomingWave);
+        ui["lottery-title"].textContent = `第 ${incomingWave} 波抽獎`;
+        ui["lottery-odds"].textContent = `沒中 50% · 醫療包 ×2 25% · 穿甲精準槍 20% · 直達第 ${incomingWave + 5} 波 5%`;
         ui["lottery-result"].textContent = "準備好了就抽一次。";
+        ui["lottery-continue"].textContent = `開始第 ${incomingWave} 波`;
         ui["lottery-draw"].classList.remove("hidden");
         ui["lottery-continue"].classList.add("hidden");
         ui["lottery-screen"].classList.remove("hidden");
@@ -2421,33 +2493,42 @@
       updateHUD();
     }
 
-    function drawWave10Lottery() {
-      if (gameState !== "lottery" || lotteryDrawn || wave !== LOTTERY_WAVE - 1) return false;
-      lotteryDrawn = true;
+    function drawMilestoneLottery() {
+      if (gameState !== "lottery" || lotteryTargetWave <= 0 || lotteryDrawnWaves.has(lotteryTargetWave) || wave !== lotteryTargetWave - 1) return false;
+      lotteryDrawnWaves.add(lotteryTargetWave);
       const roll = Math.random();
       lotteryPrize = roll < .50 ? "none" : roll < .75 ? "medkit" : roll < .95 ? "marksman" : "skip";
       ui["lottery-draw"].classList.add("hidden");
       if (lotteryPrize === "none") {
-        ui["lottery-result"].textContent = "沒中！繼續挑戰第 10 波。";
+        ui["lottery-result"].textContent = `沒中！繼續挑戰第 ${lotteryTargetWave} 波。`;
       } else if (lotteryPrize === "medkit") {
-        medkits = 2;
-        ui["lottery-result"].textContent = "抽中醫療包 ×2！作戰中按 H 或觸控「醫療」，每次可將生命、護甲與體力補滿至 100。";
+        medkits += 2;
+        ui["lottery-result"].textContent = `抽中醫療包 ×2！目前共 ${medkits} 個。按 H 或觸控「醫療」，可將生命、護甲與體力補滿至 100。`;
       } else if (lotteryPrize === "marksman") {
+        const alreadyOwned = marksmanUnlocked;
         marksmanUnlocked = true;
-        ui["lottery-result"].textContent = "抽中 L-9 穿甲精準槍！按 3 或用觸控「切槍」切換；單發精準，對重裝目標加成，但持續火力較低。";
+        if (alreadyOwned) {
+          weapons.marksman.mag = weapons.marksman.magSize;
+          weapons.marksman.reserve = 120;
+        }
+        ui["lottery-result"].textContent = alreadyOwned
+          ? "再次抽中 L-9 穿甲精準槍！已補滿該槍彈匣與備用彈藥。"
+          : "抽中 L-9 穿甲精準槍！按 3 或用觸控「切槍」切換；單發精準，對重裝目標加成，但持續火力較低。";
       } else {
-        ui["lottery-result"].textContent = "抽中 5% 頭獎：直達第 15 波！";
+        const destination = lotteryTargetWave + 5;
+        ui["lottery-result"].textContent = `抽中 5% 頭獎：直達第 ${destination} 波！`;
         ui["lottery-screen"].classList.add("hidden");
         gameState = "playing";
         endlessMode = true;
         extractionOffered = true;
-        lastResolvedWave = 14;
-        wave = 14;
+        lastResolvedWave = destination - 1;
+        wave = destination - 1;
         enemies = []; grenades = []; mines = []; particles = []; pickups = []; tracers = []; decals = [];
+        grenadePhysicsBudget = 0;
         waveDelay = 0;
         nextWave();
-        showBanner("第 15 波 // 頭獎直達", "無盡作戰 · 鎮暴重裝單位 MK.3", 3.4);
-        feed("<b>抽獎頭獎：</b>已跳過第 10～14 波，直接進入第 15 波");
+        showBanner(`第 ${destination} 波 // 頭獎直達`, `無盡作戰 · 鎮暴重裝單位 MK.${Math.floor(destination / 5)}`, 3.4);
+        feed(`<b>抽獎頭獎：</b>已跳過第 ${lotteryTargetWave}～${destination - 1} 波，直接進入第 ${destination} 波`);
         updateTouchVisibility();
         if (!touchMode) requestDesktopLock();
       }
@@ -2457,7 +2538,7 @@
     }
 
     function continueAfterLottery() {
-      if (gameState !== "lottery" || !lotteryDrawn || lotteryPrize === "skip") return false;
+      if (gameState !== "lottery" || !lotteryDrawnWaves.has(lotteryTargetWave) || wave !== lotteryTargetWave - 1 || lotteryPrize === "skip") return false;
       ui["lottery-screen"].classList.add("hidden");
       gameState = "playing";
       nextWave();
@@ -2486,6 +2567,34 @@
       ui.toast.textContent = text;
       ui.toast.classList.add("show");
       toastTimer = 1.8;
+    }
+
+    function clearCombatFeedback() {
+      lastPowerSaveSceneKey = "";
+      shake = 0;
+      damageFlash = 0;
+      muzzleFlashTimer = 0;
+      toastTimer = 0;
+      bannerTimer = 0;
+      hitMarkerTimer = 0;
+      killMarkerTimer = 0;
+      ui["damage-flash"].style.opacity = "0";
+      ui.toast.classList.remove("show");
+      ui.toast.textContent = "";
+      ui["wave-banner"].classList.remove("show");
+      ui.crosshair.classList.remove("hit", "kill");
+    }
+
+    function updateVisualFeedback(dt) {
+      // Presentation effects expire even while the simulation is paused.
+      if (bannerTimer > 0) { bannerTimer = Math.max(0, bannerTimer - dt); if (!bannerTimer) ui["wave-banner"].classList.remove("show"); }
+      if (toastTimer > 0) { toastTimer = Math.max(0, toastTimer - dt); if (!toastTimer) ui.toast.classList.remove("show"); }
+      damageFlash = Math.max(0, damageFlash - dt * 1.6);
+      ui["damage-flash"].style.opacity = damageFlash.toFixed(2);
+      shake = Math.max(0, shake - dt * 18);
+      muzzleFlashTimer = Math.max(0, muzzleFlashTimer - dt);
+      if (hitMarkerTimer > 0) { hitMarkerTimer = Math.max(0, hitMarkerTimer - dt); if (!hitMarkerTimer) ui.crosshair.classList.remove("hit"); }
+      if (killMarkerTimer > 0) { killMarkerTimer = Math.max(0, killMarkerTimer - dt); if (!killMarkerTimer) ui.crosshair.classList.remove("kill"); }
     }
 
     function initAudio() {
@@ -2603,7 +2712,7 @@
       const strafe = movementLocked ? 0 : clamp((input.keys.has("KeyD") ? 1 : 0) - (input.keys.has("KeyA") ? 1 : 0) + touchInput.moveX, -1, 1);
       const moveAmount = Math.min(1, Math.hypot(forward, strafe));
       const moving = moveAmount > .01;
-      const sprinting = (input.keys.has("ShiftLeft") || touchInput.sprint) && moving && (isGodMode() || player.stamina > 1);
+      const sprinting = (input.keys.has("ShiftLeft") || input.keys.has("ShiftRight") || touchInput.sprint) && moving && (isGodMode() || player.stamina > 1);
       let speed = (sprinting ? 3.35 : 2.25) * getUpgradeModifier("movement");
       if (input.aim) speed *= .72;
       if (isGodMode()) player.stamina = 100;
@@ -2654,6 +2763,7 @@
       reloadTimer = 0;
       reloadCycle++;
       fireTimer = Math.max(fireTimer, .22);
+      muzzleFlashTimer = 0;
       sfx("reload");
       updateHUD();
     }
@@ -2701,13 +2811,14 @@
     }
 
     function updateWeapon(dt) {
+      const triggerPressed = input.fire && !mouseDownLatch;
+      mouseDownLatch = input.fire;
       fireTimer = Math.max(0, fireTimer - dt);
       touchShotPending = Math.max(0, touchShotPending - dt);
       recoil = Math.max(0, recoil - dt * 7.5);
       if (isRepairing()) {
         cancelReloadForRepair();
         touchShotPending = 0;
-        mouseDownLatch = input.fire;
         return;
       }
       if (isReloading) {
@@ -2716,21 +2827,22 @@
         return;
       }
       const w = weapons[currentWeapon];
-      const trigger = (w.automatic ? input.fire : (input.fire && !mouseDownLatch)) || touchShotPending > 0;
+      const trigger = (w.automatic ? input.fire : triggerPressed) || touchShotPending > 0;
       if (trigger && fireTimer <= 0) { fireWeapon(); touchShotPending = 0; }
-      mouseDownLatch = input.fire;
     }
 
     function fireWeapon() {
       if (!canPlayerControl() || isRepairing()) return;
       const w = weapons[currentWeapon];
       if (w.mag <= 0) {
+        muzzleFlashTimer = 0;
         sfx("empty");
         fireTimer = .22;
         if (w.reserve > 0) startReload();
         return;
       }
       w.mag--;
+      muzzleFlashTimer = currentWeapon === "shotgun" ? .075 : currentWeapon === "marksman" ? .06 : .045;
       fireTimer = getWeaponFireDelay(w);
       recoil = Math.min(3, recoil + w.kick);
       shake = Math.min(10, shake + w.kick * 1.4);
@@ -2828,7 +2940,7 @@
       updateHUD();
     }
 
-    function updateGrenades(dt) {
+    function stepGrenades(dt) {
       for (let i = grenades.length - 1; i >= 0; i--) {
         const g = grenades[i];
         g.fuse -= dt;
@@ -2837,10 +2949,30 @@
         if (isWall(nx, g.y)) { g.vx *= -.48; nx = g.x; g.bounces++; }
         if (isWall(g.x, ny)) { g.vy *= -.48; ny = g.y; g.bounces++; }
         g.x = nx; g.y = ny; g.z += g.vz * dt;
-        if (g.z < .05) { g.z = .05; g.vz = Math.abs(g.vz) * .38; g.vx *= .76; g.vy *= .76; }
-        if (g.fuse <= 0) {
+        if (g.z < .05) {
+          g.z = .05;
+          g.vz = Math.abs(g.vz) * .38;
+          const groundDrag = Math.pow(.76, dt * 60);
+          g.vx *= groundDrag;
+          g.vy *= groundDrag;
+        }
+        if (g.fuse <= 1e-9) {
           explode(g.x, g.y, 3.15, 135, "手雷");
           grenades.splice(i, 1);
+          if (gameState !== "playing") return;
+        }
+      }
+    }
+
+    function updateGrenades(dt) {
+      // Fixed simulation steps keep throws, bounces and drag independent of FPS.
+      if (!grenades.length) grenadePhysicsBudget = 0;
+      else {
+        grenadePhysicsBudget += dt;
+        while (grenadePhysicsBudget + 1e-9 >= GRENADE_PHYSICS_STEP) {
+          grenadePhysicsBudget = Math.max(0, grenadePhysicsBudget - GRENADE_PHYSICS_STEP);
+          stepGrenades(GRENADE_PHYSICS_STEP);
+          if (gameState !== "playing") return;
         }
       }
 
@@ -2851,6 +2983,7 @@
         if (m.arm <= 0 && enemies.some(e => !e.dead && Math.hypot(e.x - m.x, e.y - m.y) < 1.25)) {
           explode(m.x, m.y, 2.65, 160, "地雷");
           mines.splice(i, 1);
+          if (gameState !== "playing") return;
         }
       }
     }
@@ -2872,10 +3005,12 @@
     }
 
     function spawnImpact(x, y, color, count) {
+      if (CFG.powerSaving) count = Math.max(1, Math.round(count * .75));
       for (let i = 0; i < count; i++) particles.push({ x, y, z: rand(.15, .85), vx: rand(-.45, .45), vy: rand(-.45, .45), vz: rand(.15, .8), life: rand(.14, .32), maxLife: .32, color, size: rand(.02, .055) });
     }
 
     function createExplosionParticles(x, y, color, count, power) {
+      if (CFG.powerSaving) count = Math.max(1, Math.round(count * .75));
       for (let i = 0; i < count; i++) {
         const a = Math.random() * TAU, speed = rand(.2, 1.7) * power;
         particles.push({ x, y, z: rand(.08, .9), vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, vz: rand(.1, 1.5) * power, life: rand(.25, .72), maxLife: .72, color: Math.random() < .4 ? "#fff0b8" : color, size: rand(.035, .12) * power });
@@ -2973,7 +3108,7 @@
       const baseAccuracy = .76 - distance * .035 + (e.type === "boss" ? .1 : 0);
       const accuracy = clamp(baseAccuracy * difficulty.accuracyScale, difficulty.minAccuracy, difficulty.maxAccuracy);
       if (Math.random() < accuracy) damagePlayer(e.damage * rand(.8, 1.12));
-      tracers.push({ enemy: true, x: e.x, y: e.y, life: .12, color: base.color });
+      tracers.push({ enemy: true, x: e.x, y: e.y, life: .12, color: base.color, endX: rand(-8, 8), endY: rand(-8, 8) });
     }
 
     function damagePlayer(amount) {
@@ -3025,6 +3160,7 @@
       updatePlayer(dt);
       updateWeapon(dt);
       updateGrenades(dt);
+      if (gameState !== "playing") return;
       updateEnemies(dt);
       if (gameState !== "playing") return;
       updateParticles(dt);
@@ -3038,13 +3174,6 @@
         if (waveDelay <= 0) nextWave();
       }
 
-      if (bannerTimer > 0) { bannerTimer -= dt; if (bannerTimer <= 0) ui["wave-banner"].classList.remove("show"); }
-      if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) ui.toast.classList.remove("show"); }
-      damageFlash = Math.max(0, damageFlash - dt * 1.6);
-      ui["damage-flash"].style.opacity = damageFlash.toFixed(2);
-      shake = Math.max(0, shake - dt * 18);
-      if (hitMarkerTimer > 0) { hitMarkerTimer -= dt; if (hitMarkerTimer <= 0) ui.crosshair.classList.remove("hit"); }
-      if (killMarkerTimer > 0) { killMarkerTimer -= dt; if (killMarkerTimer <= 0) ui.crosshair.classList.remove("kill"); }
       updateHUD();
     }
 
@@ -3173,8 +3302,9 @@
       const fov = FOV_BASE * aimFactor;
       const bobY = Math.sin(player.bob * 2) * 2.2 * player.moving;
       horizon = H * .5 + Math.tan(player.pitch || 0) * H + bobY + recoil * 2.8;
-      const shakeX = shake ? rand(-shake, shake) : 0;
-      const shakeY = shake ? rand(-shake, shake) : 0;
+      const activeShake = canPlayerControl() ? shake : 0;
+      const shakeX = activeShake ? rand(-activeShake, activeShake) : 0;
+      const shakeY = activeShake ? rand(-activeShake, activeShake) : 0;
       ctx.save();
       ctx.translate(shakeX, shakeY);
 
@@ -3290,7 +3420,7 @@
           const size = clamp(H / p.corrected * o.size, 1, 38);
           ctx.globalAlpha = clamp(o.life / o.maxLife, 0, 1);
           ctx.fillStyle = o.color;
-          ctx.shadowBlur = size * 1.8; ctx.shadowColor = o.color;
+          ctx.shadowBlur = size * (CFG.powerSaving ? 1.35 : 1.8); ctx.shadowColor = o.color;
           ctx.fillRect(p.screenX - size/2, p.screenY - size/2, size, size);
           ctx.shadowBlur = 0; ctx.globalAlpha = 1;
         }
@@ -3319,7 +3449,7 @@
           const p = projectEntity(t.x, t.y, .72, fov);
           if (!p) continue;
           ctx.moveTo(p.screenX, p.screenY);
-          ctx.lineTo(W/2 + rand(-8,8), H/2 + rand(-8,8));
+          ctx.lineTo(W/2 + (t.endX || 0), H/2 + (t.endY || 0));
         } else {
           const d = angleDiff(t.angle, player.dir);
           const ex = W * (.5 + d / fov);
@@ -3350,7 +3480,7 @@
         ctx.fillStyle = "#0d171c"; ctx.beginPath(); ctx.moveTo(-25,-12); ctx.lineTo(25,-12); ctx.lineTo(13,53); ctx.lineTo(-22,53); ctx.closePath(); ctx.fill();
         ctx.fillStyle = "#263842"; ctx.fillRect(-126,-57,132,29); ctx.fillStyle = w.color; ctx.shadowBlur=12; ctx.shadowColor=w.color; ctx.fillRect(-105,-50,61,4); ctx.shadowBlur=0;
         ctx.fillStyle = "#090e12"; ctx.fillRect(130,-48,87,18); ctx.fillStyle="#314852"; ctx.fillRect(205,-46,28,14);
-        if (fireTimer > getWeaponFireDelay(w) - .045 && w.mag >= 0) drawMuzzle(238,-39,w.color,1);
+        if (muzzleFlashTimer > 0 && canPlayerControl()) drawMuzzle(238,-39,w.color,1);
       } else if (currentWeapon === "shotgun") {
         ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.beginPath(); ctx.ellipse(0,-28,160,48,0,0,TAU); ctx.fill();
         ctx.fillStyle="#182832"; ctx.strokeStyle="#50636a"; ctx.lineWidth=2;
@@ -3358,7 +3488,7 @@
         ctx.fillStyle="#0b1115"; ctx.fillRect(-93,-49,194,23); ctx.fillStyle=w.color; ctx.shadowBlur=12; ctx.shadowColor=w.color; ctx.fillRect(-53,-43,77,5); ctx.shadowBlur=0;
         ctx.fillStyle="#283943"; ctx.fillRect(91,-57,117,18); ctx.fillStyle="#081014"; ctx.fillRect(201,-56,34,16);
         ctx.fillStyle="#10191e"; ctx.beginPath(); ctx.moveTo(-45,-13); ctx.lineTo(12,-13); ctx.lineTo(-8,54); ctx.lineTo(-51,47); ctx.closePath(); ctx.fill();
-        if (fireTimer > getWeaponFireDelay(w) - .075 && w.mag >= 0) drawMuzzle(240,-48,w.color,1.45);
+        if (muzzleFlashTimer > 0 && canPlayerControl()) drawMuzzle(240,-48,w.color,1.45);
       } else {
         ctx.fillStyle = "rgba(0,0,0,.36)"; ctx.beginPath(); ctx.ellipse(12,-32,146,44,0,0,TAU); ctx.fill();
         ctx.fillStyle = "#20202e"; ctx.strokeStyle = "#765f9e"; ctx.lineWidth = 2;
@@ -3370,7 +3500,7 @@
         ctx.fillRect(-109,-49,77,4); ctx.shadowBlur = 0;
         ctx.fillStyle = "#15131e"; ctx.fillRect(138,-45,104,11);
         ctx.fillStyle = "#8e78bf"; ctx.fillRect(233,-43,20,7);
-        if (fireTimer > getWeaponFireDelay(w) - .06 && w.mag >= 0) drawMuzzle(254,-40,w.color,.8);
+        if (muzzleFlashTimer > 0 && canPlayerControl()) drawMuzzle(254,-40,w.color,.8);
       }
       if (isReloading) {
         const progress = 1 - reloadTimer / getWeaponReloadTime(w);
@@ -3398,6 +3528,12 @@
     }
 
     function render() {
+      if (CFG.powerSaving && gameState !== "menu" && !canPlayerControl()) {
+        const sceneKey = [gameState, developer.panelOpen, developer.timeFrozen, isResumeCountdownActive(),
+          W, H, currentMap, currentWeapon, wave, isReloading, muzzleFlashTimer > 0, input.aim].join("|");
+        if (sceneKey === lastPowerSaveSceneKey) return;
+        lastPowerSaveSceneKey = sceneKey;
+      } else lastPowerSaveSceneKey = "";
       if (gameState === "menu") renderMenuScene();
       else if (player) renderWorld();
     }
@@ -3408,8 +3544,10 @@
         requestAnimationFrame(loop);
         return;
       }
-      const dt = Math.min(.034, Math.max(0, (now - lastTime) / 1000));
+      const visualDelta = Math.max(0, (now - lastTime) / 1000);
+      const dt = Math.min(.034, visualDelta);
       lastTime = now;
+      updateVisualFeedback(visualDelta);
       if (canPlayerControl()) updateGame(dt);
       else if (["menu", "gameover", "victory"].includes(gameState)) elapsed += dt * .35;
       render();
@@ -3619,6 +3757,7 @@
       cancelResumeCountdown();
       gameState = "paused";
       resetAllInput();
+      clearCombatFeedback();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       ui["pause-screen"].classList.remove("hidden");
       updateTouchVisibility();
@@ -3638,6 +3777,7 @@
       cancelResumeCountdown();
       gameState = "gameover";
       resetAllInput();
+      clearCombatFeedback();
       document.exitPointerLock?.();
       developer.panelOpen = false;
       developer.timeFrozen = false;
@@ -3663,6 +3803,7 @@
       cancelResumeCountdown();
       gameState = "victory";
       resetAllInput();
+      clearCombatFeedback();
       document.exitPointerLock?.();
       developer.panelOpen = false;
       developer.timeFrozen = false;
@@ -3684,9 +3825,18 @@
       cancelResumeCountdown();
       gameState = "menu";
       resetAllInput();
+      clearCombatFeedback();
       if (document.pointerLockElement === canvas) document.exitPointerLock?.();
       enemies = [];
+      grenades = [];
+      grenadePhysicsBudget = 0;
+      mines = [];
       particles = [];
+      pickups = [];
+      tracers = [];
+      decals = [];
+      currentUpgradeChoices = [];
+      ui["event-feed"].innerHTML = "";
       leaveDeveloperState();
       ui["gameover-screen"].classList.add("hidden");
       ui["victory-screen"].classList.add("hidden");
@@ -3708,7 +3858,7 @@
     document.getElementById("victory-menu-btn").addEventListener("click", returnToMenu);
     document.getElementById("extract-btn").addEventListener("click", chooseExtraction);
     document.getElementById("endless-btn").addEventListener("click", chooseEndless);
-    document.getElementById("lottery-draw").addEventListener("click", drawWave10Lottery);
+    document.getElementById("lottery-draw").addEventListener("click", drawMilestoneLottery);
     document.getElementById("lottery-continue").addEventListener("click", continueAfterLottery);
     document.getElementById("medkit-hud").addEventListener("click", event => { event.stopPropagation(); useMedkit(); });
     document.querySelectorAll("[data-map]").forEach(button => {
@@ -3758,6 +3908,9 @@
 
     document.querySelectorAll("[data-fps-limit]").forEach(control => {
       control.addEventListener("change", event => setFpsLimit(event.target.value));
+    });
+    document.querySelectorAll("[data-power-saving]").forEach(control => {
+      control.addEventListener("change", event => setPowerSaving(event.target.checked));
     });
 
     function setSensitivity(value) {
@@ -3934,13 +4087,15 @@
     window.addEventListener("orientationchange", onViewportResize);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportResize);
 
+    loadGraphicsSettings();
     loadTouchLayouts();
     resize();
     buildMap();
     initSprites();
     setDifficulty("specops");
     setSensitivity(1);
-    setFpsLimit(60);
+    setFpsLimit(CFG.fpsLimit, false);
+    setPowerSaving(CFG.powerSaving, false);
     setControlPreference("auto");
     player = { x: 2.7, y: 2.7, dir: .08, pitch: 0, health: 100, armor: 50, stamina: 100, grenades: 3, mines: 2, bob: 0, moving: 0 };
     syncDeveloperUI();
@@ -3963,6 +4118,9 @@
       get settings() {
         return {
           fpsLimit: CFG.fpsLimit,
+          powerSaving: CFG.powerSaving,
+          renderWidth: W,
+          renderHeight: H,
           volume: CFG.volume,
           masterVolumeScale: MASTER_VOLUME_SCALE
         };
@@ -4014,7 +4172,8 @@
         };
       },
       get lottery() {
-        return { drawn: lotteryDrawn, prize: lotteryPrize, medkits, marksmanUnlocked };
+        return { drawn: lotteryDrawnWaves.has(lotteryTargetWave), targetWave: lotteryTargetWave,
+          completedWaves: [...lotteryDrawnWaves].sort((a, b) => a - b), prize: lotteryPrize, medkits, marksmanUnlocked };
       },
       get selectedMap() { return currentMap; },
       get mapGrid() { return map.map(row => [...row]); },
@@ -4022,6 +4181,7 @@
       setMap,
       getWaveEnemyCount: waveNumber => getWaveEnemyCount(Math.max(1, Math.floor(Number(waveNumber) || 1))),
       setFpsLimit,
+      setPowerSaving,
       start: () => beginGame(false),
       pause: pauseGame,
       resume: resumeGame,
@@ -4039,7 +4199,7 @@
       chooseExtraction,
       chooseEndless,
       chooseUpgrade: applyUpgradeChoice,
-      drawLottery: drawWave10Lottery,
+      drawLottery: drawMilestoneLottery,
       continueLottery: continueAfterLottery,
       useMedkit,
       switchWeapon,
