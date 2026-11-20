@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05080d">
-  <meta name="description" content="NEON BREACH V10：記住 FPS 設定、新增省電模式，每進入十波關卡前皆可抽獎。">
-  <title>NEON BREACH V10 // 霓虹突圍</title>
+  <meta name="description" content="NEON BREACH V11.2：從外圈紅弧判讀來襲方向，迎戰四種採取不同戰術的機械敵軍。">
+  <title>NEON BREACH V11.2 // 霓虹突圍</title>
   <style>
     :root {
       --cyan: #4de7ff;
@@ -74,7 +74,7 @@
     #damage-flash {
       z-index: 7;
       opacity: 0;
-      background: radial-gradient(circle at center, transparent 28%, rgba(255, 25, 55, .68) 120%);
+      background: radial-gradient(ellipse at center, transparent 48%, rgba(198, 54, 65, .48) 100%);
       transition: opacity .08s linear;
     }
 
@@ -153,6 +153,7 @@
       background: rgba(152, 206, 219, .14);
       box-shadow: inset 0 0 0 1px rgba(195, 236, 245, .06);
     }
+    #health-bar.critical { background: var(--red); }
     .meter > i { display: block; width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 12px currentColor; transition: width .15s; }
     #armor-bar { background: #8aa8ff; }
     #stamina-bar { background: var(--amber); }
@@ -208,6 +209,13 @@
     #medkit-hud.visible { display: block; }
     body.touch-mode #medkit-hud { display: none !important; }
 
+    #damage-compass {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: clamp(156px, 32vmin, 264px); height: auto; pointer-events: none;
+    }
+    .intel { margin: -3px 0 15px; font-size: 12px; line-height: 1.55; color: #b4cbd0; }
+    .intel summary { cursor: pointer; color: var(--cyan); }
+    .intel ul { margin: 6px 0 0; padding-left: 19px; }
     #crosshair {
       --gap: 7px;
       --spread: 0px;
@@ -220,15 +228,22 @@
       opacity: .92;
       filter: drop-shadow(0 0 3px rgba(0,0,0,.9));
     }
-    #crosshair i { position: absolute; display: block; background: rgba(226, 250, 255, .95); box-shadow: 0 0 5px rgba(83, 232, 255, .6); }
+    #crosshair i { transition: opacity 45ms ease-out; position: absolute; display: block; background: rgba(226, 250, 255, .95); box-shadow: 0 0 5px rgba(83, 232, 255, .6); }
     #crosshair .u, #crosshair .d { left: 25px; width: 2px; height: 7px; }
     #crosshair .l, #crosshair .r { top: 25px; width: 7px; height: 2px; }
     #crosshair .u { top: calc(12px - var(--spread)); }
     #crosshair .d { bottom: calc(12px - var(--spread)); }
     #crosshair .l { left: calc(12px - var(--spread)); }
     #crosshair .r { right: calc(12px - var(--spread)); }
-    #crosshair.hit i { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    #crosshair.kill i { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    #crosshair .hit-confirmation {
+      position: absolute; left: 10px; top: 10px; width: 32px; height: 32px;
+      color: #e3faff; opacity: 0; pointer-events: none;
+      transition: opacity 65ms ease-out;
+    }
+    #crosshair.hit .hit-confirmation { opacity: .90; transition-duration: 18ms; }
+    #crosshair.kill .hit-confirmation { color: var(--amber); opacity: 1; transition-duration: 18ms; }
+    #crosshair.kill .hit-confirmation path { stroke-width: 2.1; }
+    #crosshair.hit i, #crosshair.kill i { opacity: .32; }
 
     #event-feed {
       position: absolute;
@@ -887,7 +902,29 @@
         <div id="boss-meter"><div id="boss-fill"></div></div>
       </div>
 
-      <div id="crosshair" aria-hidden="true"><i class="u"></i><i class="r"></i><i class="d"></i><i class="l"></i></div>
+      <svg id="damage-compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="hit-ink" gradientUnits="userSpaceOnUse" x1="28.8" y1="0" x2="71.2" y2="0">
+            <stop stop-color="#ee6865" stop-opacity="0"/>
+            <stop offset=".20" stop-color="#fb7771" stop-opacity=".58"/>
+            <stop offset=".50" stop-color="#ff9283"/>
+            <stop offset=".80" stop-color="#fb7771" stop-opacity=".58"/>
+            <stop offset="1" stop-color="#ee6865" stop-opacity="0"/>
+          </linearGradient>
+          <g id="hit-arc" fill="none" stroke="url(#hit-ink)" stroke-linecap="round">
+            <path d="M28.8 16.1 A40 40 0 0 1 71.2 16.1" stroke-width="4.2" opacity=".12"/>
+            <path d="M28.8 16.1 A40 40 0 0 1 71.2 16.1" stroke-width="1.05"/>
+          </g>
+        </defs>
+        <use href="#hit-arc" opacity="0"/><use href="#hit-arc" opacity="0"/>
+        <use href="#hit-arc" opacity="0"/><use href="#hit-arc" opacity="0"/>
+      </svg>
+      <div id="crosshair" aria-hidden="true">
+        <i class="u"></i><i class="r"></i><i class="d"></i><i class="l"></i>
+        <svg class="hit-confirmation" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path d="M6 6L10 10 M22 22L26 26 M26 6L22 10 M10 22L6 26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div id="reload-prompt">[ R ] 重新裝填</div>
       <div id="event-feed"></div>
 
@@ -932,12 +969,12 @@
     <section class="overlay" id="start-screen">
       <div class="menu-shell">
         <div class="hero">
-          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V10</div>
+          <div class="brand-mark">NIGHTWATCH RESPONSE UNIT // V11.2</div>
           <h1 class="title">NEON<span>BREACH</span></h1>
           <p class="mission">封鎖區的防禦系統已全面失控。進入設施、壓制敵對機械單位，並在每一波攻勢中活下來。</p>
         </div>
         <div class="menu-panel">
-          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V10 · 行動作戰</p>
+          <p class="touch-help" style="margin:0 0 12px;color:var(--cyan);font-weight:700">霓虹突圍 V11.2 · 行動作戰</p>
           <p class="panel-label">選擇作戰強度</p>
           <div class="difficulty" role="group" aria-label="難度">
             <button type="button" data-difficulty="rookie" aria-pressed="false">新兵</button>
@@ -951,6 +988,13 @@
             <button class="map-card" data-map="lab" type="button" aria-pressed="false"><strong>02 // 地下研究所</strong><span>環形走廊 · 中央實驗區</span></button>
           </div>
           <p class="run-rules">每清除三波可選擇一項小幅強化；第 10、20、30……波前各可抽獎一次。通過第 10 波後可撤離或進入無盡作戰。</p>
+          <details class="intel"><summary>V11.2 敵情簡報｜受擊和命中怎麼分？</summary>
+            <p>外圈的紅弧指出攻擊來自哪一側，下方代表背後。槍彈命中時，準星中央會閃一下淡白色叉形標記，擊破敵人時則亮琥珀色。</p>
+            <ul><li>巡弋無人機會橫移射擊，被逼近時會後退。</li>
+            <li>衝鋒機亮起驚嘆號後沿直線突進；往旁邊閃，趁它停頓時反擊。</li>
+            <li>戰術步兵瞄準後射兩發，再找附近掩體；沒掩體時會橫移換位。</li>
+            <li>鎮暴重裝會向前推進；頭頂出現三格警示時，找牆擋下接著的三連射。</li></ul>
+          </details>
           <button class="primary-btn" id="start-btn" type="button">進入封鎖區</button>
           <div class="controls-grid" id="desktop-controls" aria-label="操作方式">
             <div class="control"><span>移動</span><kbd>WASD</kbd></div>
@@ -1195,7 +1239,9 @@
     const DEVELOPER_MAX_WAVE = 99;
     const RESUME_COUNTDOWN_MS = 3000;
     const MASTER_VOLUME_SCALE = 0.36;
+    const GRENADE_RADIUS = .08;
     const GRENADE_PHYSICS_STEP = 1 / 120;
+    const HIGH_SCORE_STORAGE_KEY = "NEON_BREACH_HIGH_SCORE_V1";
     const GRAPHICS_STORAGE_KEY = "NEON_BREACH_GRAPHICS_V1";
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d", { alpha: false });
@@ -1351,7 +1397,7 @@
         name: "L-9 穿甲精準槍", baseMagSize: 12, magSize: 12, mag: 12, reserve: 60,
         damage: 56, pellets: 1, spread: 0.007, aimSpread: 0.002,
         fireDelay: 0.29, reloadTime: 1.65, automatic: false, range: 23,
-        kick: 1.45, color: "#b69bff"
+        penetrationDamageScale: .70, kick: 1.45, color: "#b69bff"
       }
     };
 
@@ -1429,7 +1475,23 @@
     let wave = 0;
     let score = 0;
     let kills = 0;
-    let sessionHighScore = 0;
+    let highScore = readHighScore();
+    function readHighScore() {
+      try {
+        const value = Number(window.localStorage.getItem(HIGH_SCORE_STORAGE_KEY));
+        return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+      } catch (_) { return 0; }
+    }
+
+    function recordFinishedRun() {
+      if (developer.runActive) return;
+      const stored = readHighScore();
+      highScore = Math.max(stored, highScore, score);
+      if (highScore > stored) {
+        try { window.localStorage.setItem(HIGH_SCORE_STORAGE_KEY, String(highScore)); }
+        catch (_) { /* Keep the record in memory when storage is unavailable. */ }
+      }
+    }
     let endlessMode = false;
     let extractionOffered = false;
     let lastResolvedWave = 0;
@@ -1447,10 +1509,13 @@
     let recoil = 0;
     let shake = 0;
     let damageFlash = 0;
+    const HIT_ARC_SECONDS = .70;
+    const HIT_ARC_PEAK = .88;
+    const hitDirections = Array.from(document.querySelectorAll("#damage-compass use"),
+      el => ({ el, bearing: 0, life: 0, onset: 0 }));
     let hitMarkerTimer = 0;
     let killMarkerTimer = 0;
     let toastTimer = 0;
-    let mouseDownLatch = false;
     let audioCtx = null;
     let masterGain = null;
     let lastAnimationFrameTime = 0;
@@ -1495,7 +1560,7 @@
     let touchMode = coarsePointer.matches;
     const touchInput = { moveX: 0, moveY: 0, fire: false, aim: false, sprint: false, repair: false };
     const contacts = new Map();
-    let touchShotPending = 0;
+    let pendingShotTime = 0;
 
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
     function lerp(a, b, t) { return a + (b - a) * t; }
@@ -2393,36 +2458,49 @@
       return true;
     }
 
+    // Every pursuer has the same goal. Rebuild the distance field only when that tile or map changes.
+    let pathMap = null, pathGoal = -1;
+    let pathDistances = new Int32Array(0), pathQueue = new Int32Array(0);
+    let pathSteps = [];
     function findNextCell(sx, sy, tx, ty) {
-      const startX = Math.floor(sx), startY = Math.floor(sy);
-      const goalX = Math.floor(tx), goalY = Math.floor(ty);
-      if (startX === goalX && startY === goalY) return { x: tx, y: ty };
-      const width = map[0].length, height = map.length;
-      const start = startY * width + startX;
-      const goal = goalY * width + goalX;
-      const queue = [start];
-      const came = new Int32Array(width * height).fill(-1);
-      came[start] = start;
-      let qi = 0;
-      while (qi < queue.length) {
-        const cur = queue[qi++];
-        if (cur === goal) break;
-        const x = cur % width, y = Math.floor(cur / width);
-        const neighbors = [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
-        for (const [nx, ny] of neighbors) {
-          if (nx < 1 || ny < 1 || nx >= width - 1 || ny >= height - 1 || map[ny][nx]) continue;
-          const ni = ny * width + nx;
-          if (came[ni] !== -1) continue;
-          came[ni] = cur;
-          queue.push(ni);
+      const width = map[0].length, size = width * map.length;
+      const start = Math.floor(sy) * width + Math.floor(sx);
+      const goal = Math.floor(ty) * width + Math.floor(tx);
+      if (start === goal) return { x: tx, y: ty };
+
+      if (pathMap !== map || pathGoal !== goal) {
+        if (pathDistances.length !== size) {
+          pathDistances = new Int32Array(size);
+          pathQueue = new Int32Array(size);
+        }
+        if (pathMap !== map) pathSteps = [1, -1, width, -width];
+        pathMap = map;
+        pathGoal = goal;
+        pathDistances.fill(-1);
+        pathQueue[0] = goal;
+        pathDistances[goal] = 0;
+        let head = 0, tail = 1;
+        while (head < tail) {
+          const cell = pathQueue[head++];
+          // Both maps have a solid outer border, so every queued tile has four in-bounds neighbors.
+          for (const step of pathSteps) {
+            const next = cell + step;
+            if (pathDistances[next] !== -1 || map[Math.floor(next / width)][next % width]) continue;
+            pathDistances[next] = pathDistances[cell] + 1;
+            pathQueue[tail++] = next;
+          }
         }
       }
-      if (came[goal] === -1) return { x: tx, y: ty };
-      let cur = goal;
-      while (came[cur] !== start && cur !== start) cur = came[cur];
-      return { x: (cur % width) + .5, y: Math.floor(cur / width) + .5 };
+      if (pathDistances[start] > 0) {
+        for (const step of pathSteps) {
+          const next = start + step;
+          if (pathDistances[next] === pathDistances[start] - 1) {
+            return { x: next % width + .5, y: Math.floor(next / width) + .5 };
+          }
+        }
+      }
+      return { x: tx, y: ty };
     }
-
     function safeSpawnPoint() {
       const candidates = [];
       for (let y = 1; y < map.length - 1; y++) for (let x = 1; x < map[0].length - 1; x++) {
@@ -2452,7 +2530,8 @@
         attackTimer: rand(.2, 1) * difficulty.attackIntervalScale / bossCadenceEvolution,
         bossTier,
         pathTimer: 0, target: null, hitFlash: 0, anim: Math.random() * TAU,
-        dead: false, alert: 0, strafe: Math.random() < .5 ? -1 : 1
+        dead: false, strafe: Math.random() < .5 ? -1 : 1, sideTimer: rand(1.1, 2.1),
+        phase: "move", phaseTime: 0, shotsLeft: 0, dashX: 0, dashY: 0, cover: null, detourTime: 0
       });
     }
 
@@ -2513,7 +2592,7 @@
         }
         ui["lottery-result"].textContent = alreadyOwned
           ? "再次抽中 L-9 穿甲精準槍！已補滿該槍彈匣與備用彈藥。"
-          : "抽中 L-9 穿甲精準槍！按 3 或用觸控「切槍」切換；單發精準，對重裝目標加成，但持續火力較低。";
+          : "抽中 L-9 穿甲精準槍！按 3 或用觸控「切槍」切換。單發最多貫穿兩名敵人，第二名承受 70% 傷害。對戰術步兵與重裝單位另有 25% 傷害加成，牆壁可擋下子彈。";
       } else {
         const destination = lotteryTargetWave + 5;
         ui["lottery-result"].textContent = `抽中 5% 頭獎：直達第 ${destination} 波！`;
@@ -2569,8 +2648,53 @@
       toastTimer = 1.8;
     }
 
+    function hitDirectionOpacity(slot) {
+      const age = HIT_ARC_SECONDS - slot.life;
+      if (age < .05) return lerp(slot.onset, HIT_ARC_PEAK, age / .05);
+      const t = clamp(slot.life / (HIT_ARC_SECONDS - .09), 0, 1);
+      return HIT_ARC_PEAK * t * t * (3 - 2 * t);
+    }
+
+    function paintHitDirection(slot) {
+      const degrees = angleDiff(slot.bearing, player.dir) * 180 / Math.PI;
+      slot.el.setAttribute("transform", `rotate(${degrees.toFixed(2)} 50 50)`);
+      slot.el.setAttribute("opacity", hitDirectionOpacity(slot).toFixed(3));
+    }
+
+    function markIncomingHit(source) {
+      if (!source || !Number.isFinite(source.x) || !Number.isFinite(source.y)) return;
+      const dx = source.x - player.x, dy = source.y - player.y;
+      if (Math.hypot(dx, dy) < .001) return; // No bearing for coincident positions.
+      const bearing = Math.atan2(dy, dx);
+      let nearest = null, gap = Math.PI / 8, oldest = hitDirections[0];
+      for (const slot of hitDirections) {
+        const delta = Math.abs(angleDiff(slot.bearing, bearing));
+        if (slot.life > 0 && delta < gap) { nearest = slot; gap = delta; }
+        if (slot.life < oldest.life) oldest = slot;
+      }
+      const slot = nearest || oldest;
+      if (!slot) return;
+      // Repeated hits from the same side renew the cue without blinking off.
+      slot.onset = nearest ? Math.max(.32, hitDirectionOpacity(slot)) : .32;
+      slot.bearing = bearing; // Remember the direction at impact.
+      slot.life = HIT_ARC_SECONDS;
+      paintHitDirection(slot);
+    }
+
+    function updateHitDirections(dt) {
+      for (const slot of hitDirections) {
+        if (!slot.life) continue;
+        slot.life = Math.max(0, slot.life - dt);
+        paintHitDirection(slot);
+      }
+    }
+
     function clearCombatFeedback() {
       lastPowerSaveSceneKey = "";
+      for (const slot of hitDirections) {
+        slot.life = 0;
+        slot.el.setAttribute("opacity", "0");
+      }
       shake = 0;
       damageFlash = 0;
       muzzleFlashTimer = 0;
@@ -2589,8 +2713,10 @@
       // Presentation effects expire even while the simulation is paused.
       if (bannerTimer > 0) { bannerTimer = Math.max(0, bannerTimer - dt); if (!bannerTimer) ui["wave-banner"].classList.remove("show"); }
       if (toastTimer > 0) { toastTimer = Math.max(0, toastTimer - dt); if (!toastTimer) ui.toast.classList.remove("show"); }
-      damageFlash = Math.max(0, damageFlash - dt * 1.6);
-      ui["damage-flash"].style.opacity = damageFlash.toFixed(2);
+      if (damageFlash > 0) {
+        damageFlash = Math.max(0, damageFlash - dt * 1.6);
+        ui["damage-flash"].style.opacity = damageFlash.toFixed(2);
+      }
       shake = Math.max(0, shake - dt * 18);
       muzzleFlashTimer = Math.max(0, muzzleFlashTimer - dt);
       if (hitMarkerTimer > 0) { hitMarkerTimer = Math.max(0, hitMarkerTimer - dt); if (!hitMarkerTimer) ui.crosshair.classList.remove("hit"); }
@@ -2675,9 +2801,7 @@
     function beginArmorRepair() {
       if (!canPlayerControl() || isGodMode()) return;
       cancelReloadForRepair();
-      touchShotPending = 0;
-      // Prevent a semi-automatic shot from being buffered while repair is held.
-      mouseDownLatch = input.fire;
+      pendingShotTime = 0;
       updateHUD();
     }
 
@@ -2693,7 +2817,7 @@
         return;
       }
       cancelReloadForRepair();
-      touchShotPending = 0;
+      pendingShotTime = 0;
       armorRepairTimer -= dt;
       let restored = false;
       while (armorRepairTimer <= 0) {
@@ -2758,6 +2882,7 @@
 
     function switchWeapon(name) {
       if (!canPlayerControl() || !weapons[name] || (name === "marksman" && !marksmanUnlocked) || name === currentWeapon) return;
+      pendingShotTime = 0;
       currentWeapon = name;
       isReloading = false;
       reloadTimer = 0;
@@ -2792,6 +2917,7 @@
     function startReload() {
       const w = weapons[currentWeapon];
       if (!canPlayerControl() || isRepairing() || isReloading || w.mag >= w.magSize || w.reserve <= 0) return;
+      pendingShotTime = 0;
       isReloading = true;
       const reloadDuration = getWeaponReloadTime(w);
       reloadTimer = reloadDuration;
@@ -2811,14 +2937,11 @@
     }
 
     function updateWeapon(dt) {
-      const triggerPressed = input.fire && !mouseDownLatch;
-      mouseDownLatch = input.fire;
       fireTimer = Math.max(0, fireTimer - dt);
-      touchShotPending = Math.max(0, touchShotPending - dt);
       recoil = Math.max(0, recoil - dt * 7.5);
       if (isRepairing()) {
         cancelReloadForRepair();
-        touchShotPending = 0;
+        pendingShotTime = 0;
         return;
       }
       if (isReloading) {
@@ -2827,8 +2950,29 @@
         return;
       }
       const w = weapons[currentWeapon];
-      const trigger = (w.automatic ? input.fire : triggerPressed) || touchShotPending > 0;
-      if (trigger && fireTimer <= 0) { fireWeapon(); touchShotPending = 0; }
+      if (fireTimer <= 0 && ((w.automatic && input.fire) || pendingShotTime > 0)) {
+        pendingShotTime = 0;
+        fireWeapon();
+      } else {
+        pendingShotTime = Math.max(0, pendingShotTime - dt);
+      }
+    }
+
+    function findShotHit(rx, ry, slope, limit, previousTarget) {
+      let target = null, distance = limit;
+      for (const enemy of enemies) {
+        if (enemy.dead || enemy === previousTarget) continue;
+        const dx = enemy.x - player.x, dy = enemy.y - player.y;
+        const along = dx * rx + dy * ry;
+        if (along <= 0 || along >= distance) continue;
+        const perp = Math.abs(-dx * ry + dy * rx);
+        const height = .5 + slope * along;
+        if (perp < enemy.radius * 1.12 && height > .04 && height < enemyTypes[enemy.type].scale) {
+          target = enemy;
+          distance = along;
+        }
+      }
+      return { target, distance };
     }
 
     function fireWeapon() {
@@ -2853,29 +2997,24 @@
         const shotAngle = player.dir + rand(-spread, spread) * (1 + recoil * .2);
         const shotPitch = player.pitch + rand(-spread, spread) * .72 * (1 + recoil * .16);
         const wallHit = castRay(shotAngle, player.x, player.y, w.range);
-        let target = null, targetDist = wallHit.dist;
-        const rx = Math.cos(shotAngle), ry = Math.sin(shotAngle);
-        for (const enemy of enemies) {
-          if (enemy.dead) continue;
-          const dx = enemy.x - player.x, dy = enemy.y - player.y;
-          const along = dx * rx + dy * ry;
-          if (along <= 0 || along >= targetDist) continue;
-          const perp = Math.abs(-dx * ry + dy * rx);
-          const hitHeight = .5 + Math.tan(shotPitch) * along;
-          const targetHeight = enemyTypes[enemy.type].scale;
-          if (perp < enemy.radius * 1.12 && hitHeight > .04 && hitHeight < targetHeight) { target = enemy; targetDist = along; }
-        }
-        if (target) {
+        const rx = Math.cos(shotAngle), ry = Math.sin(shotAngle), slope = Math.tan(shotPitch);
+        let hit = findShotHit(rx, ry, slope, wallHit.dist, null);
+        for (let hitIndex = 0; hit.target; hitIndex++) {
+          const target = hit.target;
           let dmg = w.damage * getUpgradeModifier("damage");
-          if (currentWeapon === "shotgun") dmg *= clamp(1.15 - targetDist / w.range * .65, .48, 1);
-          if (currentWeapon === "marksman" && ["trooper", "boss"].includes(target.type)) dmg *= 1.25;
+          if (hitIndex === 1) dmg *= w.penetrationDamageScale;
+          if (currentWeapon === "shotgun") dmg *= clamp(1.15 - hit.distance / w.range * .65, .48, 1);
+          if (w.penetrationDamageScale && (target.type === "trooper" || target.type === "boss")) dmg *= 1.25;
           damageEnemy(target, dmg, "槍械");
-          anyHit = true;
           spawnImpact(target.x, target.y, enemyTypes[target.type].color, 3);
-        } else {
+          anyHit = true;
+          if (!w.penetrationDamageScale || hitIndex === 1) break;
+          hit = findShotHit(rx, ry, slope, wallHit.dist, target);
+        }
+        if (!hit.target) {
           spawnImpact(wallHit.x, wallHit.y, wallHit.tile === 4 ? "#a6ffb4" : wallHit.tile === 3 ? "#bb9bff" : wallHit.tile === 2 ? "#4de7ff" : "#f5b55f", 2);
         }
-        tracers.push({ angle: shotAngle, dist: targetDist, life: .075, color: w.color });
+        tracers.push({ angle: shotAngle, dist: hit.distance, life: .075, color: w.color });
       }
       if (anyHit) {
         hitMarkerTimer = .12;
@@ -2889,7 +3028,6 @@
       if (enemy.dead) return;
       enemy.hp -= amount;
       enemy.hitFlash = .11;
-      enemy.alert = 2;
       if (enemy.hp <= 0) killEnemy(enemy, source);
     }
 
@@ -2916,11 +3054,20 @@
     function throwGrenade() {
       if (!canPlayerControl() || player.grenades <= 0) { if (canPlayerControl()) toast("手雷已用盡"); return; }
       player.grenades--;
-      const speed = 5.6;
+      const speed = 5.6, dx = Math.cos(player.dir), dy = Math.sin(player.dir);
+      // Sweep the four corners from the player to the intended release point.
+      let offset = .4;
+      for (const ox of [-GRENADE_RADIUS, GRENADE_RADIUS]) {
+        for (const oy of [-GRENADE_RADIUS, GRENADE_RADIUS]) {
+          const hit = castRay(player.dir, player.x + ox, player.y + oy, .4);
+          if (hit.tile && hit.dist < offset) offset = Math.max(0, hit.dist - .001);
+        }
+      }
+      const x = player.x + dx * offset, y = player.y + dy * offset;
+      const clear = canOccupy(x, y, GRENADE_RADIUS);
       grenades.push({
-        x: player.x + Math.cos(player.dir) * .4,
-        y: player.y + Math.sin(player.dir) * .4,
-        z: .45, vx: Math.cos(player.dir) * speed, vy: Math.sin(player.dir) * speed,
+        x: clear ? x : player.x, y: clear ? y : player.y,
+        z: .45, vx: dx * speed, vy: dy * speed,
         vz: 2.5, fuse: 2.15, bounces: 0
       });
       sfx("grenade");
@@ -2945,10 +3092,12 @@
         const g = grenades[i];
         g.fuse -= dt;
         g.vz -= 6.7 * dt;
-        let nx = g.x + g.vx * dt, ny = g.y + g.vy * dt;
-        if (isWall(nx, g.y)) { g.vx *= -.48; nx = g.x; g.bounces++; }
-        if (isWall(g.x, ny)) { g.vy *= -.48; ny = g.y; g.bounces++; }
-        g.x = nx; g.y = ny; g.z += g.vz * dt;
+        const nx = g.x + g.vx * dt, ny = g.y + g.vy * dt;
+        if (canOccupy(nx, g.y, GRENADE_RADIUS)) g.x = nx;
+        else { g.vx *= -.48; g.bounces++; }
+        if (canOccupy(g.x, ny, GRENADE_RADIUS)) g.y = ny;
+        else { g.vy *= -.48; g.bounces++; }
+        g.z += g.vz * dt;
         if (g.z < .05) {
           g.z = .05;
           g.vz = Math.abs(g.vz) * .38;
@@ -3037,44 +3186,184 @@
       }
     }
 
+    function setEnemyPhase(e, phase, time = 0) {
+      e.phase = phase;
+      e.phaseTime = time;
+    }
+
+    function pursuePlayer(e, dt) {
+      if (!e.target || e.pathTimer <= 0 || Math.hypot(e.x - e.target.x, e.y - e.target.y) < .12) {
+        e.target = findNextCell(e.x, e.y, player.x, player.y);
+        e.pathTimer = rand(.5, .8);
+      }
+      moveEnemyToward(e, e.target.x, e.target.y, dt, e.speed * .85);
+    }
+
+    function advanceEnemy(e, dt) {
+      // A clear sight line can graze a corner that the unit itself is too wide to pass.
+      if (e.detourTime > 0) { pursuePlayer(e, dt); return; }
+      const x = e.x, y = e.y;
+      moveEnemyToward(e, player.x, player.y, dt, e.speed);
+      if (Math.hypot(e.x - x, e.y - y) < e.speed * dt * .24) {
+        e.target = null;
+        e.detourTime = 1.35 / Math.max(.5, e.speed);
+      }
+    }
+
+    function sideStep(e, dx, dy, radial, lateral, dt) {
+      const length = Math.hypot(dx, dy) || 1;
+      const x = e.x, y = e.y, s = e.strafe * lateral;
+      moveWithCollision(e, e.speed * dt * (dx * radial - dy * s) / length,
+        e.speed * dt * (dy * radial + dx * s) / length, e.radius);
+      // Change side when a wall blocks this route, with a hold time to avoid corner jitter.
+      if (e.sideTimer <= 0 || (e.sideTimer < 1 && Math.hypot(e.x - x, e.y - y) < e.speed * dt * .15)) {
+        e.strafe *= -1; e.sideTimer = rand(1.3, 2.4);
+      }
+    }
+
+    function updateDrone(e, dt, dx, dy, d, visible) {
+      const range = enemyTypes.drone.range;
+      if (!visible) { pursuePlayer(e, dt); return; }
+      const radial = d > range * .83 ? .76 : d < 3.3 ? -.88 : 0;
+      sideStep(e, dx, dy, radial, radial ? .32 : .83, dt);
+      if (d <= range && e.attackTimer <= 0 && lineClear(e.x, e.y, player.x, player.y)) {
+        enemyShoot(e, d);
+        e.attackTimer = enemyCadence(e);
+      }
+    }
+
+    function updateRusher(e, dt, dx, dy, d, visible) {
+      if (e.phase === "recover") {
+        if (e.phaseTime <= 0) setEnemyPhase(e, "move");
+        return;
+      }
+      const dashSpeed = clamp(e.speed * 3.7, 4.6, 6.8);
+      if (e.phase === "windup") {
+        if (e.phaseTime <= 0) setEnemyPhase(e, "dash", 3.25 / dashSpeed);
+        return;
+      }
+      if (e.phase === "dash") {
+        const x = e.x, y = e.y;
+        const step = dashSpeed * dt;
+        const nx = x + e.dashX * step, ny = y + e.dashY * step;
+        const blocked = !canOccupy(nx, ny, e.radius);
+        if (!blocked) { e.x = nx; e.y = ny; }
+        // Test the swept segment: neither a thin corner nor a low FPS frame grants a free hit.
+        const t = blocked ? 0 : clamp((dx * e.dashX + dy * e.dashY) / step, 0, 1);
+        const contact = Math.hypot(dx - e.dashX * step * t, dy - e.dashY * step * t) < .62
+          && lineClear(x, y, player.x, player.y);
+        if (contact) damagePlayer(e.damage, { x, y });
+        if (contact || blocked || e.phaseTime <= 0) {
+          setEnemyPhase(e, "recover", .67);
+          e.attackTimer = enemyCadence(e);
+        }
+        return;
+      }
+      if (visible && d < 3.15 && e.attackTimer <= 0) {
+        e.dashX = d > .001 ? dx / d : Math.cos(player.dir);
+        e.dashY = d > .001 ? dy / d : Math.sin(player.dir);
+        setEnemyPhase(e, "windup", .48);
+      } else if (visible) {
+        if (d > .65) advanceEnemy(e, dt);
+      } else pursuePlayer(e, dt);
+    }
+
+    function findNearbyCover(e) {
+      // Only on completion of a burst; search nearby walkable corners, not the whole map per frame.
+      const cx = Math.floor(e.x), cy = Math.floor(e.y);
+      let best = null, bestDist = 2.85;
+      for (let y = cy - 3; y <= cy + 3; y++) for (let x = cx - 3; x <= cx + 3; x++) {
+        const tx = x + .5, ty = y + .5, dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
+        if (d < .45 || d >= bestDist || !canOccupy(tx, ty, e.radius) ||
+            lineClear(tx, ty, player.x, player.y)) continue;
+        const steps = Math.ceil(d * 6);
+        let reachable = true;
+        for (let i = 1; i < steps; i++) {
+          if (!canOccupy(e.x + dx * i / steps, e.y + dy * i / steps, e.radius)) { reachable = false; break; }
+        }
+        if (reachable) { best = { x: tx, y: ty }; bestDist = d; }
+      }
+      return best;
+    }
+
+    function updateTrooper(e, dt, dx, dy, d, visible) {
+      const range = enemyTypes.trooper.range;
+      if (e.phase === "relocate") {
+        if (e.cover) moveEnemyToward(e, e.cover.x, e.cover.y, dt, e.speed * 1.4);
+        else sideStep(e, dx, dy, d < 3 ? -.4 : 0, .9, dt);
+        if (e.phaseTime <= 0 || (e.cover && Math.hypot(e.x-e.cover.x, e.y-e.cover.y) < .13)) {
+          setEnemyPhase(e, e.cover ? "inCover" : "move", e.cover ? .42 : 0);
+          e.target = null;
+        }
+        return;
+      }
+      if (e.phase === "inCover") {
+        if (e.phaseTime <= 0 || visible) { e.cover = null; setEnemyPhase(e, "move"); }
+        return;
+      }
+      if (!visible || d > range) {
+        setEnemyPhase(e, "move"); e.shotsLeft = 0;
+        if (visible) advanceEnemy(e, dt);
+        else pursuePlayer(e, dt);
+        return;
+      }
+      if (e.phase === "aim" && e.phaseTime <= 0) {
+        e.shotsLeft = 2; setEnemyPhase(e, "burst");
+      }
+      if (e.phase === "burst" && e.phaseTime <= 0) {
+        enemyShoot(e, d, .72);
+        if (--e.shotsLeft) e.phaseTime = .18;
+        else {
+          e.cover = findNearbyCover(e);
+          const duration = e.cover ? Math.hypot(e.x-e.cover.x, e.y-e.cover.y) / (e.speed * 1.4) + .25 : .85;
+          setEnemyPhase(e, "relocate", duration);
+          e.attackTimer = enemyCadence(e);
+        }
+      } else if (e.phase === "move" && e.attackTimer <= 0) setEnemyPhase(e, "aim", .42);
+    }
+
+    function updateBoss(e, dt, d, visible) {
+      const range = enemyTypes.boss.range;
+      if (!visible || d > range) {
+        if (e.phase === "spinup" || e.phase === "volley") {
+          e.shotsLeft = 0; setEnemyPhase(e, "move"); e.attackTimer = Math.max(e.attackTimer, .45);
+        }
+        if (visible) advanceEnemy(e, dt);
+        else pursuePlayer(e, dt);
+        return;
+      }
+      if (e.phase === "spinup" && e.phaseTime <= 0) {
+        e.shotsLeft = 3; setEnemyPhase(e, "volley");
+      }
+      if (e.phase === "volley" && e.phaseTime <= 0) {
+        enemyShoot(e, d, .73);
+        if (--e.shotsLeft) e.phaseTime = .23;
+        else { setEnemyPhase(e, "move"); e.attackTimer = enemyCadence(e) * 1.28; }
+      } else if (e.phase === "move") {
+        if (e.attackTimer <= 0) setEnemyPhase(e, "spinup", .82);
+        else if (d > 2.2) advanceEnemy(e, dt);
+      }
+    }
+
     function updateEnemies(dt) {
+      if (dt <= 0) return;
       for (const e of enemies) {
         if (e.dead) continue;
         e.attackTimer -= dt;
         e.pathTimer -= dt;
+        e.phaseTime -= dt;
+        e.sideTimer -= dt;
+        e.detourTime = Math.max(0, e.detourTime - dt);
         e.hitFlash = Math.max(0, e.hitFlash - dt);
-        e.alert = Math.max(0, e.alert - dt);
         e.anim += dt * (2.5 + e.speed);
-        const base = enemyTypes[e.type];
         const dx = player.x - e.x, dy = player.y - e.y;
         const dist = Math.hypot(dx, dy);
         const visible = dist < 11 && lineClear(e.x, e.y, player.x, player.y);
-        if (visible) e.alert = 2;
-
-        if (dist <= base.range && visible) {
-          if (e.type === "rusher" || dist < .72) {
-            if (dist > .55) moveEnemyToward(e, player.x, player.y, dt, e.speed);
-            if (e.attackTimer <= 0 && dist < .86) {
-              damagePlayer(e.damage);
-              e.attackTimer = base.cadence * getDifficultyProfile().attackIntervalScale;
-            }
-          } else {
-            if (dist > base.range * .72) moveEnemyToward(e, player.x, player.y, dt, e.speed * .48);
-            else if (dist < 2.2) moveEnemyToward(e, e.x - dx, e.y - dy, dt, e.speed * .45);
-            else {
-              const side = e.strafe;
-              moveEnemyToward(e, e.x - dy * side, e.y + dx * side, dt, e.speed * .24);
-              if (Math.random() < .008) e.strafe *= -1;
-            }
-            if (e.attackTimer <= 0) enemyShoot(e, dist);
-          }
-        } else {
-          if (e.pathTimer <= 0 || !e.target) {
-            e.target = findNextCell(e.x, e.y, player.x, player.y);
-            e.pathTimer = rand(.55, .95);
-          }
-          moveEnemyToward(e, e.target.x, e.target.y, dt, e.speed * .72);
-        }
+        if (e.type === "drone") updateDrone(e, dt, dx, dy, dist, visible);
+        else if (e.type === "rusher") updateRusher(e, dt, dx, dy, dist, visible);
+        else if (e.type === "trooper") updateTrooper(e, dt, dx, dy, dist, visible);
+        else if (e.type === "boss") updateBoss(e, dt, dist, visible);
+        if (gameState !== "playing") return;
       }
 
       for (let i = 0; i < enemies.length; i++) for (let j = i + 1; j < enemies.length; j++) {
@@ -3095,24 +3384,28 @@
 
     function moveEnemyToward(e, tx, ty, dt, speed) {
       const dx = tx - e.x, dy = ty - e.y;
-      const d = Math.hypot(dx, dy) || 1;
-      moveWithCollision(e, dx / d * speed * dt, dy / d * speed * dt, e.radius);
+      const d = Math.hypot(dx, dy);
+      const step = d ? Math.min(1, speed * dt / d) : 0;
+      moveWithCollision(e, dx * step, dy * step, e.radius);
     }
 
-    function enemyShoot(e, distance) {
+    function enemyCadence(e) {
+      return enemyTypes[e.type].cadence * rand(.84, 1.18) * getDifficultyProfile().attackIntervalScale / (1 + (e.bossTier || 0) * .02);
+    }
+
+    function enemyShoot(e, distance, damageScale = 1) {
       const base = enemyTypes[e.type];
       const difficulty = getDifficultyProfile();
-      const bossCadenceEvolution = 1 + (e.bossTier || 0) * .02;
-      e.attackTimer = base.cadence * rand(.84, 1.18) * difficulty.attackIntervalScale / bossCadenceEvolution;
       sfx("enemy");
       const baseAccuracy = .76 - distance * .035 + (e.type === "boss" ? .1 : 0);
       const accuracy = clamp(baseAccuracy * difficulty.accuracyScale, difficulty.minAccuracy, difficulty.maxAccuracy);
-      if (Math.random() < accuracy) damagePlayer(e.damage * rand(.8, 1.12));
+      if (Math.random() < accuracy) damagePlayer(e.damage * rand(.8, 1.12) * damageScale, e);
       tracers.push({ enemy: true, x: e.x, y: e.y, life: .12, color: base.color, endX: rand(-8, 8), endY: rand(-8, 8) });
     }
 
-    function damagePlayer(amount) {
-      if (!canPlayerControl()) return;
+    function damagePlayer(amount, source = null) {
+      if (!canPlayerControl() || !Number.isFinite(amount) || amount <= 0) return;
+      if (source) markIncomingHit(source); // Self-inflicted splash keeps the red flash but indicates no enemy.
       if (isGodMode()) {
         player.health = 100;
         player.armor = 100;
@@ -3177,47 +3470,63 @@
       updateHUD();
     }
 
+    const weaponOrder = Object.keys(weapons);
+    function setHudText(element, value) {
+      const text = String(value);
+      if (element.textContent !== text) element.textContent = text;
+    }
+    function setHudWidth(element, percent) {
+      const width = Math.round(percent * 10) / 10 + "%";
+      if (element.style.width !== width) element.style.width = width;
+    }
+
     function updateHUD() {
       if (!player) return;
       const w = weapons[currentWeapon];
+      let liveCount = 0, boss = null;
+      for (const enemy of enemies) {
+        if (enemy.dead) continue;
+        liveCount++;
+        if (!boss && enemy.type === "boss") boss = enemy;
+      }
       const godMode = isGodMode();
       if (godMode) {
         player.health = 100;
         player.armor = 100;
         player.stamina = 100;
       }
-      ui["wave-value"].textContent = pad(wave, 2);
-      ui["enemy-value"].textContent = pad(enemies.filter(e => !e.dead).length, 2);
-      ui["score-value"].textContent = developer.runActive ? `DEV ${pad(score, 6)}` : pad(score, 6);
-      ui["health-value"].textContent = godMode ? "∞" : Math.ceil(player.health);
-      ui["health-bar"].style.width = `${godMode ? 100 : clamp(player.health, 0, 100)}%`;
-      ui["health-bar"].style.background = !godMode && player.health < 30 ? "#ff4d63" : "#4de7ff";
-      ui["armor-value"].textContent = godMode ? "∞" : Math.ceil(player.armor);
-      ui["armor-bar"].style.width = `${godMode ? 100 : clamp(player.armor, 0, 100)}%`;
-      ui["stamina-value"].textContent = godMode ? "∞" : Math.ceil(player.stamina);
-      ui["stamina-bar"].style.width = `${godMode ? 100 : clamp(player.stamina, 0, 100)}%`;
-      ui["weapon-name"].textContent = w.name + (isRepairing() ? " // 護甲修補中" : isReloading ? " // 裝填中" : "");
-      ui["ammo-mag"].textContent = pad(w.mag, 2);
-      ui["ammo-reserve"].textContent = pad(w.reserve, 3);
-      ui["grenade-count"].textContent = player.grenades;
-      ui["mine-count"].textContent = player.mines;
-      ui["medkit-count"].textContent = medkits;
+      setHudText(ui["wave-value"], pad(wave, 2));
+      setHudText(ui["enemy-value"], pad(liveCount, 2));
+      setHudText(ui["score-value"], developer.runActive ? `DEV ${pad(score, 6)}` : pad(score, 6));
+      setHudText(ui["health-value"], godMode ? "∞" : Math.ceil(player.health));
+      setHudWidth(ui["health-bar"], godMode ? 100 : clamp(player.health, 0, 100));
+      ui["health-bar"].classList.toggle("critical", !godMode && player.health < 30);
+      setHudText(ui["armor-value"], godMode ? "∞" : Math.ceil(player.armor));
+      setHudWidth(ui["armor-bar"], godMode ? 100 : clamp(player.armor, 0, 100));
+      setHudText(ui["stamina-value"], godMode ? "∞" : Math.ceil(player.stamina));
+      setHudWidth(ui["stamina-bar"], godMode ? 100 : clamp(player.stamina, 0, 100));
+      setHudText(ui["weapon-name"], w.name + (isRepairing() ? " // 護甲修補中" : isReloading ? " // 裝填中" : ""));
+      setHudText(ui["ammo-mag"], pad(w.mag, 2));
+      setHudText(ui["ammo-reserve"], pad(w.reserve, 3));
+      setHudText(ui["grenade-count"], player.grenades);
+      setHudText(ui["mine-count"], player.mines);
+      setHudText(ui["medkit-count"], medkits);
       ui["medkit-hud"].classList.toggle("visible", medkits > 0 && gameState === "playing");
-      ui["reload-prompt"].textContent = touchMode ? "點一下「換彈」重新裝填" : "[ R ] 重新裝填";
+      setHudText(ui["reload-prompt"], touchMode ? "點一下「換彈」重新裝填" : "[ R ] 重新裝填");
       ui["reload-prompt"].classList.toggle("show", w.mag === 0 && w.reserve > 0 && !isReloading && !isRepairing());
-      touchUI["touch-grenade-count"].textContent = player.grenades;
-      touchUI["touch-mine-count"].textContent = player.mines;
-      touchUI["touch-medkit-count"].textContent = medkits;
+      setHudText(touchUI["touch-grenade-count"], player.grenades);
+      setHudText(touchUI["touch-mine-count"], player.mines);
+      setHudText(touchUI["touch-medkit-count"], medkits);
       touchUI["touch-medkit"].classList.toggle("unlocked", medkits > 0 && gameState === "playing");
-      touchUI["touch-weapon-slot"].textContent = `${["rifle", "shotgun", "marksman"].indexOf(currentWeapon) + 1} / ${marksmanUnlocked ? 3 : 2}`;
-      ui.crosshair.style.setProperty("--spread", `${Math.min(9, recoil * 2.6 + (player.moving || 0) * 1.3)}px`);
-      const boss = enemies.find(e => e.type === "boss" && !e.dead);
+      setHudText(touchUI["touch-weapon-slot"], `${weaponOrder.indexOf(currentWeapon) + 1} / ${marksmanUnlocked ? 3 : 2}`);
+      const spread = Math.min(9, recoil * 2.6 + (player.moving || 0) * 1.3).toFixed(2) + "px";
+      if (ui.crosshair.style.getPropertyValue("--spread") !== spread) ui.crosshair.style.setProperty("--spread", spread);
       ui["boss-bar"].classList.toggle("visible", !!boss);
       if (boss) {
         const pct = clamp(boss.hp / boss.maxHp * 100, 0, 100);
-        ui["boss-title"].textContent = `鎮暴重裝單位 // MK.${(boss.bossTier || 0) + 1}`;
-        ui["boss-fill"].style.width = `${pct}%`;
-        ui["boss-hp-text"].textContent = `${Math.ceil(pct)}%`;
+        setHudText(ui["boss-title"], `鎮暴重裝單位 // MK.${(boss.bossTier || 0) + 1}`);
+        setHudWidth(ui["boss-fill"], pct);
+        setHudText(ui["boss-hp-text"], `${Math.ceil(pct)}%`);
       }
     }
 
@@ -3408,6 +3717,8 @@
           const z = .03 + Math.sin(o.anim * 2) * .015;
           drawBillboard(spriteCache[`enemy-${o.type}`], o.x, o.y, z, base.scale, fov, deathAlpha, o.hitFlash > 0 ? "rgba(255,255,255,.42)" : null);
           if (!o.dead && item.dist < 9) renderEnemyBar(o, fov);
+          if (!o.dead && (o.phase === "windup" || o.phase === "aim" || o.phase === "spinup"))
+            renderAttackCue(o, fov);
         } else if (item.kind === "grenade") {
           drawBillboard(spriteCache.grenade, o.x, o.y, o.z, .25, fov, 1);
         } else if (item.kind === "mine") {
@@ -3425,6 +3736,31 @@
           ctx.shadowBlur = 0; ctx.globalAlpha = 1;
         }
       }
+    }
+
+    function renderAttackCue(e, fov) {
+      const p = projectEntity(e.x, e.y, 1.05 * enemyTypes[e.type].scale, fov);
+      if (!p || p.screenX < 0 || p.screenX >= W || p.corrected > zBuffer[Math.floor(p.screenX)] + .1) return;
+      // Keep the warning just above the unit. For a point-blank unit use its visible upper body.
+      const s = clamp(H * .024, 9, 22), x = p.screenX, y = Math.max(s + 2, p.screenY - 13 - s * .55);
+      ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+      ctx.fillStyle = "rgba(20,10,15,.88)";
+      ctx.fillRect(-1.02, -.56, 2.04, 1.12);
+      if (e.phase === "windup") {
+        ctx.fillStyle = "#ffc36b";
+        ctx.beginPath(); ctx.moveTo(0, -.49); ctx.lineTo(.58, .44); ctx.lineTo(-.58, .44); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#442016"; ctx.fillRect(-.07,-.19,.14,.31); ctx.fillRect(-.07,.20,.14,.11);
+      } else {
+        const boss = e.phase === "spinup", n = boss ? 3 : 2;
+        const progress = clamp(1 - e.phaseTime / (boss ? .82 : .42), 0, 1);
+        for (let i = 0; i < n; i++) {
+          const bx = (i - (n - 1) * .5) * .52;
+          ctx.fillStyle = boss ? "#ff7964" : "#cf9bff";
+          ctx.globalAlpha = progress >= i / n ? 1 : .28;
+          ctx.fillRect(bx - .18, -.29, .36, .58);
+        }
+      }
+      ctx.restore();
     }
 
     function renderEnemyBar(e, fov) {
@@ -3548,7 +3884,7 @@
       const dt = Math.min(.034, visualDelta);
       lastTime = now;
       updateVisualFeedback(visualDelta);
-      if (canPlayerControl()) updateGame(dt);
+      if (canPlayerControl()) { updateHitDirections(visualDelta); updateGame(dt); }
       else if (["menu", "gameover", "victory"].includes(gameState)) elapsed += dt * .35;
       render();
       requestAnimationFrame(loop);
@@ -3589,7 +3925,7 @@
       touchInput.sprint = false;
       touchInput.repair = false;
       armorRepairTimer = getArmorRepairInterval();
-      touchShotPending = 0;
+      pendingShotTime = 0;
       syncActionInput();
     }
 
@@ -3599,7 +3935,6 @@
       input.mouseAim = false;
       input.mouseDX = 0;
       input.mouseDY = 0;
-      mouseDownLatch = false;
       resetTouchInput();
     }
 
@@ -3686,7 +4021,7 @@
       if (contact.role === "move") resetJoystick();
       if (contact.role === "fire") {
         touchInput.fire = false;
-        if (cancelled) touchShotPending = 0;
+        if (cancelled) pendingShotTime = 0;
       }
       if (contact.role === "repair") {
         touchInput.repair = false;
@@ -3784,7 +4119,7 @@
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
       ui["lottery-screen"].classList.add("hidden");
-      if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
+      recordFinishedRun();
       ui["final-wave-label"].textContent = endlessMode ? "無盡抵達波次" : "抵達波次";
       if (developer.runActive && endlessMode) ui["gameover-copy"].textContent = `開發者無盡測試於第 ${wave} 波結束；本次分數不列入最高紀錄。`;
       else if (developer.runActive) ui["gameover-copy"].textContent = "開發者測試已結束；本次分數不列入最高紀錄。";
@@ -3792,7 +4127,7 @@
       else ui["gameover-copy"].textContent = "封鎖區仍未解除。重新整備，準備下一次突入。";
       ui["final-wave"].textContent = pad(wave, 2);
       ui["final-score"].textContent = developer.runActive ? `${score.toLocaleString("zh-TW")} DEV` : score.toLocaleString("zh-TW");
-      ui["high-score"].textContent = developer.runActive ? "不計分" : sessionHighScore.toLocaleString("zh-TW");
+      ui["high-score"].textContent = developer.runActive ? "不計分" : highScore.toLocaleString("zh-TW");
       ui["gameover-screen"].classList.remove("hidden");
       ui.hud.classList.remove("visible");
       syncDeveloperUI();
@@ -3810,7 +4145,7 @@
       ui["extraction-screen"].classList.add("hidden");
       ui["upgrade-screen"].classList.add("hidden");
       ui["lottery-screen"].classList.add("hidden");
-      if (!developer.runActive) sessionHighScore = Math.max(sessionHighScore, score);
+      recordFinishedRun();
       ui["victory-copy"].textContent = developer.runActive ? "你已在第 10 波後安全撤離。此為開發者作戰，分數不列入最高紀錄。" : "你已清除第 10 波並安全撤離，作戰完成。";
       ui["victory-wave"].textContent = pad(wave, 2);
       ui["victory-kills"].textContent = kills.toLocaleString("zh-TW");
@@ -3972,6 +4307,7 @@
         return;
       }
       if (e.target && ["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
+      if (e.code === "KeyF" && !canPlayerControl()) return;
       input.keys.add(e.code);
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
       if (e.repeat) return;
@@ -3986,12 +4322,11 @@
       else if (e.code === "KeyG") throwGrenade();
       else if (e.code === "KeyM") placeMine();
       else if (e.code === "KeyH") useMedkit();
-      else if (e.code === "KeyF" && gameState !== "menu") toggleFullscreen();
       else if (e.code === "Escape" && touchMode && gameState === "playing") pauseGame();
     });
     document.addEventListener("keyup", e => {
       input.keys.delete(e.code);
-      if (e.code === "KeyF") endArmorRepair();
+      if (e.code === "KeyF" && canPlayerControl()) endArmorRepair();
     });
     document.addEventListener("mousemove", e => {
       if (!touchMode && document.pointerLockElement === canvas && canPlayerControl()) {
@@ -4000,24 +4335,43 @@
       }
     });
     document.addEventListener("pointerdown", e => {
-      const isTouch = e.pointerType === "touch" || e.pointerType === "pen";
-      if (isTouch) {
+      if (e.pointerType === "touch" || e.pointerType === "pen") {
         lastPointerKind = "touch";
         if (controlPreference === "auto" && !touchMode) setTouchMode(true);
-        return;
+      } else if (e.pointerType === "mouse") {
+        pressDesktopButton(e);
       }
-      if (e.pointerType !== "mouse" || (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) return;
+    }, true);
+
+    function pressDesktopButton(e) {
+      if (e.sourceCapabilities?.firesTouchEvents) return;
       if (touchUI["touch-controls"].contains(e.target)) return;
       if (e.target.closest?.("#medkit-hud")) return;
       lastPointerKind = "mouse";
       if (controlPreference === "auto" && touchMode && gameState !== "playing") setTouchMode(false);
       if (touchMode || !canPlayerControl()) return;
       if (e.target !== canvas && document.pointerLockElement !== canvas) return;
-      if (e.button === 0) input.mouseFire = true;
-      if (e.button === 2) input.mouseAim = true;
+      if (e.button === 0 && !input.mouseFire) {
+        input.mouseFire = true;
+        if (!isReloading && !isRepairing()) pendingShotTime = .10;
+      } else if (e.button === 2 && !input.mouseAim) {
+        input.mouseAim = true;
+      } else return;
       syncActionInput();
       requestDesktopLock();
-    }, true);
+    }
+
+    // Mouse events also report individual button changes while the other button is held.
+    document.addEventListener("mousedown", pressDesktopButton, true);
+    function releaseDesktopButton(e) {
+      if (e.button === 0 && input.mouseFire) input.mouseFire = false;
+      else if (e.button === 2 && input.mouseAim) input.mouseAim = false;
+      else return;
+      syncActionInput();
+    }
+    document.addEventListener("mouseup", e => {
+      if (!e.sourceCapabilities?.firesTouchEvents && (input.mouseAim || input.mouseFire)) releaseDesktopButton(e);
+    });
 
     touchUI.joystick.addEventListener("pointerdown", event => {
       const contact = startContact(event, touchUI.joystick, "move");
@@ -4036,7 +4390,7 @@
     touchUI["touch-fire"].addEventListener("pointerdown", event => {
       if (!startContact(event, touchUI["touch-fire"], "fire")) return;
       touchInput.fire = true;
-      touchShotPending = .25;
+      if (!isReloading && !isRepairing()) pendingShotTime = .25;
       syncActionInput();
     }, { passive: false });
     touchUI["touch-fire"].addEventListener("click", event => event.preventDefault());
@@ -4065,15 +4419,16 @@
       else if (contact.role === "look" || contact.role === "fire") moveTouchLook(event, contact);
     }, { passive: false });
     document.addEventListener("pointerup", event => {
-      if (event.pointerType === "mouse") {
-        if (event.button === 0) input.mouseFire = false;
-        if (event.button === 2) input.mouseAim = false;
-        syncActionInput();
-      }
+      if (event.pointerType === "mouse") releaseDesktopButton(event);
       endContact(event);
     }, { passive: false });
     document.addEventListener("pointercancel", event => {
-      if (event.pointerType === "mouse") { input.mouseFire = false; input.mouseAim = false; syncActionInput(); }
+      if (event.pointerType === "mouse") {
+        if (!touchMode) pendingShotTime = 0;
+        input.mouseFire = false;
+        input.mouseAim = false;
+        syncActionInput();
+      }
       endContact(event, true);
     }, { passive: false });
     document.addEventListener("lostpointercapture", event => endContact(event, true));
@@ -4100,128 +4455,6 @@
     player = { x: 2.7, y: 2.7, dir: .08, pitch: 0, health: 100, armor: 50, stamina: 100, grenades: 3, mines: 2, bob: 0, moving: 0 };
     syncDeveloperUI();
     updateHUD();
-    window.__NEON_BREACH_TEST__ = {
-      get state() { return gameState; },
-      get snapshot() {
-        const weapon = weapons[currentWeapon];
-        return {
-          wave,
-          score,
-          enemies: enemies.filter(e => !e.dead).length,
-          difficulty: CFG.difficultyKey,
-          sensitivity: CFG.sensitivity,
-          controls: touchMode ? "touch" : "desktop",
-          player: player ? { x: player.x, y: player.y, dir: player.dir, pitch: player.pitch, health: player.health, armor: player.armor, stamina: player.stamina, grenades: player.grenades, mines: player.mines } : null,
-          weapon: { name: currentWeapon, mag: weapon.mag, magSize: weapon.magSize, reserve: weapon.reserve }
-        };
-      },
-      get settings() {
-        return {
-          fpsLimit: CFG.fpsLimit,
-          powerSaving: CFG.powerSaving,
-          renderWidth: W,
-          renderHeight: H,
-          volume: CFG.volume,
-          masterVolumeScale: MASTER_VOLUME_SCALE
-        };
-      },
-      get resumeCountdown() {
-        return {
-          active: isResumeCountdownActive(),
-          seconds: isResumeCountdownActive() ? Math.max(1, Math.ceil((resumeCountdownEnd - performance.now()) / 1000)) : 0
-        };
-      },
-      get simulationClock() {
-        return { elapsed, waveDelay, regenerationTimer, armorRepairTimer };
-      },
-      get developer() {
-        return {
-          desktopEligible: isDeveloperDesktopEligible(),
-          entryOpen: developer.entryOpen,
-          runActive: developer.runActive,
-          playerMode: developer.playerMode,
-          panelOpen: developer.panelOpen,
-          timeFrozen: developer.timeFrozen,
-          targetWave: developer.targetWave,
-          scoreEligible: !developer.runActive
-        };
-      },
-      get balance() {
-        return {
-          key: CFG.difficultyKey,
-          ...getDifficultyProfile(),
-          waveCounts: Array.from({ length: EXTRACTION_WAVE }, (_, index) => getWaveEnemyCount(index + 1))
-        };
-      },
-      get progression() {
-        const boss = enemies.find(enemy => enemy.type === "boss" && !enemy.dead);
-        return {
-          endlessMode,
-          extractionOffered,
-          lastResolvedWave,
-          upgradeInterval: UPGRADE_INTERVAL,
-          upgradeSelections,
-          levels: { ...upgradeLevels },
-          choices: currentUpgradeChoices.map(choice => choice.id),
-          definitions: UPGRADE_DEFINITIONS.map(({ id, amount, direction, unit, magazineFor, maxLevel }) => ({ id, amount, direction, unit, magazineFor, maxLevel })),
-          magazines: {
-            rifle: { level: getUpgradeLevel("rifleMagazine"), size: weapons.rifle.magSize, loaded: weapons.rifle.mag },
-            shotgun: { level: getUpgradeLevel("shotgunMagazine"), size: weapons.shotgun.magSize, loaded: weapons.shotgun.mag }
-          },
-          boss: boss ? { tier: boss.bossTier, hp: boss.hp, maxHp: boss.maxHp, damage: boss.damage, speed: boss.speed } : null
-        };
-      },
-      get lottery() {
-        return { drawn: lotteryDrawnWaves.has(lotteryTargetWave), targetWave: lotteryTargetWave,
-          completedWaves: [...lotteryDrawnWaves].sort((a, b) => a - b), prize: lotteryPrize, medkits, marksmanUnlocked };
-      },
-      get selectedMap() { return currentMap; },
-      get mapGrid() { return map.map(row => [...row]); },
-      setDifficulty,
-      setMap,
-      getWaveEnemyCount: waveNumber => getWaveEnemyCount(Math.max(1, Math.floor(Number(waveNumber) || 1))),
-      setFpsLimit,
-      setPowerSaving,
-      start: () => beginGame(false),
-      pause: pauseGame,
-      resume: resumeGame,
-      finishResumeCountdown: () => finishResumeCountdown(resumeCountdownEnd || performance.now()),
-      openDeveloperEntry,
-      closeDeveloperEntry,
-      startDeveloper: startDeveloperGame,
-      setDeveloperMode: setDeveloperPlayerMode,
-      openDeveloperPanel,
-      closeDeveloperPanel,
-      setTimeFrozen: setDeveloperTimeFrozen,
-      setTargetWave: setDeveloperTargetWave,
-      jumpWave: jumpToDeveloperWave,
-      refill: refillDeveloperResources,
-      chooseExtraction,
-      chooseEndless,
-      chooseUpgrade: applyUpgradeChoice,
-      drawLottery: drawMilestoneLottery,
-      continueLottery: continueAfterLottery,
-      useMedkit,
-      switchWeapon,
-      clearWave: () => {
-        if (gameState !== "playing") return false;
-        for (const enemy of enemies) enemy.dead = true;
-        enemies = [];
-        waveDelay = 0;
-        return resolveWaveClear();
-      },
-      advanceWave: () => {
-        if (gameState !== "playing") return false;
-        waveDelay = 0;
-        nextWave();
-        return wave;
-      },
-      damagePlayer,
-      fireWeapon,
-      tick: dt => { if (canPlayerControl()) updateGame(clamp(Number(dt) || 0, 0, .034)); },
-      castRay: angle => castRay(angle),
-      verifyMap: () => map.length === 22 && map.every(row => row.length === 22) && map[0].every(Boolean) && map.at(-1).every(Boolean)
-    };
     requestAnimationFrame(loop);
   })();
   </script>
